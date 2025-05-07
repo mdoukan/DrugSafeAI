@@ -218,6 +218,22 @@ function displayResults(results) {
     results.results.forEach(result => {
         const card = document.createElement('div');
         card.className = 'card mb-3';
+        
+        // Format alternative medications if they exist
+        let alternativesHtml = '';
+        if (result.alternative_medications && result.alternative_medications.length > 0) {
+            alternativesHtml = `
+                <div class="mt-3">
+                    <strong>Alternative Medications:</strong>
+                    <ul class="list-group mt-2">
+                        ${result.alternative_medications.map(alt => `
+                            <li class="list-group-item">${alt}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
         card.innerHTML = `
             <div class="card-header">
                 <h4>${result.medication}</h4>
@@ -230,6 +246,7 @@ function displayResults(results) {
                 </p>
                 <p><strong>Probability:</strong> ${(result.probability * 100).toFixed(1)}%</p>
                 <p><strong>Recommendation:</strong> ${result.recommendation}</p>
+                ${alternativesHtml}
             </div>
         `;
         resultsContent.appendChild(card);

@@ -371,25 +371,50 @@ class PredictionService:
                     'low': 'Continue with atorvastatin, monitor cholesterol levels',
                     'medium': 'Consider adding lifestyle changes or consult about other statins',
                     'high': 'Discuss alternative cholesterol medications with your doctor, such as other statins or PCSK9 inhibitors'
+                },
+                'amoxicillin': {
+                    'low': 'Continue with amoxicillin as prescribed',
+                    'medium': 'Consider alternative antibiotics like azithromycin or doxycycline',
+                    'high': 'Switch to alternative antibiotics like cephalexin or ciprofloxacin after consulting your doctor'
+                },
+                'fluoxetine': {
+                    'low': 'Continue with fluoxetine as prescribed',
+                    'medium': 'Consider other SSRIs like sertraline or escitalopram',
+                    'high': 'Discuss alternative antidepressants like bupropion or mirtazapine with your doctor'
+                },
+                'omeprazole': {
+                    'low': 'Continue with omeprazole as prescribed',
+                    'medium': 'Consider other PPIs like pantoprazole or H2 blockers like famotidine',
+                    'high': 'Discuss alternative reflux treatments like H2 blockers or lifestyle modifications with your doctor'
                 }
             }
             
             # Generate recommendation with alternatives
             medication_lower = medication.lower()
+            
+            # Determine alternative medication recommendations
+            alternative_info = ""
             if medication_lower in alternatives:
-                recommendation = f"{medication} appears to be safe for use. Monitor for any side effects." if risk_level == 'Low' else \
-                               f"Use {medication} with caution. Monitor closely for side effects." if risk_level == 'Medium' else \
-                               f"High risk with {medication}. {alternatives[medication_lower][risk_level]}"
+                risk_level_lower = risk_level.lower()
+                alternative_info = f" {alternatives[medication_lower][risk_level_lower]}"
+            
+            # Format the recommendation
+            if risk_level == 'Low':
+                recommendation = f"{medication} appears to be safe for use. Monitor for any side effects."
+            elif risk_level == 'Medium':
+                recommendation = f"Use {medication} with caution. Monitor closely for side effects.{alternative_info}"
             else:
-                recommendation = f"{medication} appears to be safe for use. Monitor for any side effects." if risk_level == 'Low' else \
-                               f"Use {medication} with caution. Monitor closely for side effects." if risk_level == 'Medium' else \
-                               f"High risk with {medication}. Consider alternative medications."
+                recommendation = f"High risk with {medication}.{alternative_info}"
+            
+            # Get alternative medications through the helper method
+            alternative_meds = self._get_alternative_recommendations(medication, risk_level, probability)
             
             result = {
                 'medication': medication,
                 'risk_level': risk_level,
                 'probability': probability,
-                'recommendation': recommendation
+                'recommendation': recommendation,
+                'alternative_medications': alternative_meds
             }
             
             self.logger.info(f"Formatted result: {result}")
