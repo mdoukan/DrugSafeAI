@@ -429,42 +429,52 @@ class PredictionService:
         """
         İlaç için alternatif önerileri oluştur
         """
-        # İlaç kategorilerine göre alternatifler
+        # İlaç kategorilerine göre alternatifler ve spesifik ilaç önerileri
         alternatives = {
             'aspirin': {
-                'low': ['Acetaminophen (Paracetamol)', 'Naproxen'],
-                'medium': ['Acetaminophen (Paracetamol)', 'Topical NSAIDs'],
-                'high': ['Acetaminophen (Paracetamol)', 'Physical therapy', 'Lifestyle modifications']
+                'low': ['Acetaminophen (Paracetamol) 500mg', 'Naproxen 220mg'],
+                'medium': ['Acetaminophen (Paracetamol) 500mg', 'Diclofenac gel 1%'],
+                'high': ['Acetaminophen (Paracetamol) 325-500mg', 'Consider Tramadol 50mg for severe pain']
             },
             'ibuprofen': {
-                'low': ['Acetaminophen (Paracetamol)', 'Naproxen'],
-                'medium': ['Acetaminophen (Paracetamol)', 'Topical NSAIDs'],
-                'high': ['Acetaminophen (Paracetamol)', 'Physical therapy', 'Lifestyle modifications']
+                'low': ['Acetaminophen (Paracetamol) 500mg', 'Naproxen 220mg'],
+                'medium': ['Acetaminophen (Paracetamol) 500mg', 'Diclofenac gel 1%'],
+                'high': ['Acetaminophen (Paracetamol) 325-500mg', 'Celecoxib 100mg']
             },
             'metformin': {
-                'low': ['Lifestyle modifications', 'Diet changes'],
-                'medium': ['Sitagliptin', 'Saxagliptin'],
-                'high': ['Lifestyle modifications', 'Diet changes', 'Exercise program']
+                'low': ['Continue Metformin with proper diet', 'Consider Metformin XR for fewer GI side effects'],
+                'medium': ['Sitagliptin (Januvia) 100mg', 'Empagliflozin (Jardiance) 10mg'],
+                'high': ['Sitagliptin (Januvia) 100mg', 'Pioglitazone 15-30mg', 'Gliclazide 30-60mg']
             },
-            'insulin': {
-                'low': ['Oral diabetes medications', 'Lifestyle modifications'],
-                'medium': ['Sitagliptin', 'Saxagliptin', 'Dapagliflozin'],
-                'high': ['Lifestyle modifications', 'Diet changes', 'Exercise program']
+            'amoxicillin': {
+                'low': ['Continue Amoxicillin as prescribed'],
+                'medium': ['Azithromycin 250-500mg', 'Doxycycline 100mg'],
+                'high': ['Cephalexin 500mg', 'Ciprofloxacin 500mg', 'Clarithromycin 500mg']
             },
             'lisinopril': {
-                'low': ['Amlodipine', 'Losartan'],
-                'medium': ['Valsartan', 'Ramipril'],
-                'high': ['Lifestyle modifications', 'Diet changes', 'Exercise program']
+                'low': ['Maintain Lisinopril with regular blood pressure monitoring'],
+                'medium': ['Losartan 50mg', 'Valsartan 80mg', 'Amlodipine 5mg'],
+                'high': ['Amlodipine 5-10mg', 'Metoprolol 25-100mg', 'Valsartan 80-160mg']
             },
             'atorvastatin': {
-                'low': ['Rosuvastatin', 'Pravastatin'],
-                'medium': ['Simvastatin', 'Lovastatin'],
-                'high': ['Lifestyle modifications', 'Diet changes', 'Exercise program']
+                'low': ['Continue Atorvastatin with regular cholesterol monitoring'],
+                'medium': ['Rosuvastatin 5-10mg', 'Pravastatin 20-40mg'],
+                'high': ['Rosuvastatin 5-10mg', 'Ezetimibe 10mg', 'Pravastatin 20-40mg']
+            },
+            'fluoxetine': {
+                'low': ['Continue Fluoxetine as prescribed'],
+                'medium': ['Sertraline 50-100mg', 'Escitalopram 10mg', 'Venlafaxine 75mg'],
+                'high': ['Sertraline 50-100mg', 'Bupropion 150-300mg', 'Mirtazapine 15-30mg']
+            },
+            'omeprazole': {
+                'low': ['Continue Omeprazole as prescribed'],
+                'medium': ['Pantoprazole 40mg', 'Famotidine 20mg', 'Ranitidine 150mg'],
+                'high': ['Pantoprazole 40mg', 'Famotidine 20-40mg', 'Consider combination with Sucralfate 1g']
             },
             'default': {
-                'low': ['Consult your doctor for alternatives'],
-                'medium': ['Consult your doctor for alternatives', 'Consider lifestyle modifications'],
-                'high': ['Consult your doctor for alternatives', 'Consider lifestyle modifications', 'Seek specialist advice']
+                'low': ['Consult your doctor for specific alternative medications'],
+                'medium': ['Consult your doctor for specific alternative medications', 'Consider lifestyle modifications'],
+                'high': ['Urgent: Consult your doctor for specific alternative medications', 'Seek specialist advice']
             }
         }
 
@@ -475,17 +485,22 @@ class PredictionService:
         drug_alternatives = alternatives.get(drug_name, alternatives['default'])
         
         # Risk seviyesine göre önerileri al
-        recommendations = drug_alternatives.get(risk_level.lower(), drug_alternatives['medium'])
+        risk_level_lower = risk_level.lower()
+        recommendations = drug_alternatives.get(risk_level_lower, drug_alternatives['medium'])
+        
+        # Eğer ilaç listede yoksa ve/veya öneriler yoksa, varsayılan önerileri kullan
+        if not recommendations:
+            recommendations = alternatives['default'][risk_level_lower]
         
         # Önerileri formatla
         formatted_recommendations = []
         for rec in recommendations:
             if probability > 0.7:
-                formatted_recommendations.append(f"Strongly consider: {rec}")
+                formatted_recommendations.append(f"Strongly recommended alternative: {rec}")
             elif probability > 0.5:
-                formatted_recommendations.append(f"Consider: {rec}")
+                formatted_recommendations.append(f"Recommended alternative: {rec}")
             else:
-                formatted_recommendations.append(rec)
+                formatted_recommendations.append(f"Possible alternative: {rec}")
         
         return formatted_recommendations
 

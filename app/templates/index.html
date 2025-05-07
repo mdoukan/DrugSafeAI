@@ -224,11 +224,32 @@ function displayResults(results) {
         if (result.alternative_medications && result.alternative_medications.length > 0) {
             alternativesHtml = `
                 <div class="mt-3">
-                    <strong>Alternative Medications:</strong>
+                    <h5 class="text-primary">Alternative Medications:</h5>
                     <ul class="list-group mt-2">
-                        ${result.alternative_medications.map(alt => `
-                            <li class="list-group-item">${alt}</li>
-                        `).join('')}
+                        ${result.alternative_medications.map(alt => {
+                            let itemClass = 'list-group-item';
+                            
+                            // Stile göre arka plan rengini belirle
+                            if (alt.startsWith('Strongly recommended')) {
+                                itemClass += ' list-group-item-success';
+                            } else if (alt.startsWith('Recommended')) {
+                                itemClass += ' list-group-item-info';
+                            } else {
+                                itemClass += ' list-group-item-light';
+                            }
+                            
+                            // İlacı vurgula ve bold yap
+                            const textParts = alt.split(': ');
+                            let formattedText = alt;
+                            
+                            if (textParts.length > 1) {
+                                const recommendationType = textParts[0];
+                                const medicationInfo = textParts[1];
+                                formattedText = `<span>${recommendationType}: </span><strong>${medicationInfo}</strong>`;
+                            }
+                            
+                            return `<li class="${itemClass}">${formattedText}</li>`;
+                        }).join('')}
                     </ul>
                 </div>
             `;
