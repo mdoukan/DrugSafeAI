@@ -3,13 +3,29 @@ from app.models.train_model import ModelTrainer
 from config import Config
 
 async def main():
-    # Test için örnek ilaç listesi
+    # Kısaltılmış ilaç listesi - her kategoriden sadece 1-2 ilaç
     drug_list = [
+        # Ağrı kesiciler / Antiinflamatuarlar
         'aspirin',
         'ibuprofen',
-        'paracetamol',
+        
+        # Antibiyotikler
+        'amoxicillin',
+        
+        # Diyabet ilaçları
         'metformin',
-        'amoxicillin'
+        
+        # Kan basıncı ilaçları
+        'lisinopril',
+        
+        # Kolesterol ilaçları
+        'atorvastatin',
+        
+        # Antidepresanlar
+        'fluoxetine',
+        
+        # Diğer yaygın ilaçlar
+        'omeprazole'
     ]
 
     trainer = ModelTrainer(api_key=Config.OPENFDA_API_KEY)

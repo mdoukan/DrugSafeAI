@@ -29,6 +29,7 @@ class ModelTrainer:
         self.data_service = OpenFDAService(api_key)
         self.scaler = StandardScaler()
         self.label_encoders = {}
+        self.feature_names = []  # Feature isimlerini tutacak liste
         self.logger = logging.getLogger(__name__)
         
         # XGBoost parametreleri
@@ -50,24 +51,51 @@ class ModelTrainer:
     async def collect_training_data(self, drug_list: List[str]) -> pd.DataFrame:
         """OpenFDA API'den eğitim verilerini topla"""
         all_data = []
+        max_events_per_drug = 500  # Her ilaç için max 500 olay (1000'den 500'e düşürüldü)
+        batch_size = 500  # Her sorguda 500 olay çek
         
         for drug in drug_list:
             try:
                 self.logger.info(f"Fetching data for drug: {drug}")
-                events = await self.data_service.fetch_adverse_events(drug)
+                total_events = 0
+                offset = 0
                 
-                if not events:
-                    self.logger.warning(f"No events found for {drug}")
-                    continue
+                # Her ilaç için en fazla 2 batch çek (max 1000 olay)
+                max_batches = 2
+                batch_count = 0
+                
+                # Her ilaç için istenilen sayıda veri çekene kadar birden fazla sorgu yap
+                while total_events < max_events_per_drug and batch_count < max_batches:
+                    batch_count += 1
+                    self.logger.info(f"Fetching batch for {drug}: offset={offset}, limit={batch_size}")
+                    events = await self.data_service.fetch_adverse_events(drug, limit=batch_size, offset=offset)
                     
-                self.logger.info(f"Received {len(events)} events for {drug}")
-                processed_events = self._process_events(events, drug)
+                    if not events:
+                        self.logger.warning(f"No more events found for {drug} after {total_events} events")
+                        break
+                    
+                    self.logger.info(f"Received {len(events)} events for {drug} (batch {offset//batch_size + 1})")
+                    processed_events = self._process_events(events, drug)
+                    
+                    if processed_events:
+                        self.logger.info(f"Processed {len(processed_events)} valid events for {drug} in current batch")
+                        all_data.extend(processed_events)
+                        total_events += len(processed_events)
+                    
+                    # Tüm sonuçları aldıysak döngüyü sonlandır
+                    if len(events) < batch_size:
+                        self.logger.info(f"Reached end of results for {drug}")
+                        break
+                    
+                    # Sonraki sayfaya geç
+                    offset += batch_size
+                    
+                    # API rate limiting - her sorgu sonrası bekleme (2 saniyeden 1 saniyeye düşürüldü)
+                    await asyncio.sleep(1)
                 
-                if processed_events:
-                    self.logger.info(f"Processed {len(processed_events)} valid events for {drug}")
-                    all_data.extend(processed_events)
+                self.logger.info(f"Total processed events for {drug}: {total_events}")
                 
-                # API rate limiting için kısa bir bekleme
+                # İlaçlar arası geçişte 1 saniye bekle (3 saniyeden 1 saniyeye düşürüldü)
                 await asyncio.sleep(1)
                 
             except Exception as e:
@@ -170,12 +198,38 @@ class ModelTrainer:
         features['patient_sex'] = df['patient_sex']
         features['serious'] = df['serious']
 
+        # Yaş grupları - yaşa bağlı yan etkileri daha iyi modelleyebilmek için
+        age_bins = [0, 12, 18, 30, 45, 65, 80, 150]
+        age_labels = ['child', 'teen', 'young_adult', 'adult', 'middle_aged', 'senior', 'elderly']
+        features['age_group'] = pd.cut(df['patient_age'], bins=age_bins, labels=age_labels, right=False)
+        
+        # One-hot encoding yaş grupları için
+        age_dummies = pd.get_dummies(features['age_group'], prefix='age_group')
+        features = pd.concat([features, age_dummies], axis=1)
+        features.drop('age_group', axis=1, inplace=True)
+
         # BMI hesaplama (eğer height ve weight varsa)
         if 'height' in df.columns and 'weight' in df.columns:
             mask = (df['height'] > 0) & (df['weight'] > 0)
             features['bmi'] = 0.0  # Varsayılan değer
             features.loc[mask, 'bmi'] = df.loc[mask, 'weight'] / ((df.loc[mask, 'height']/100) ** 2)
+            
+            # BMI kategorileri
+            bmi_bins = [0, 18.5, 25, 30, 35, 100]
+            bmi_labels = ['underweight', 'normal', 'overweight', 'obese', 'extremely_obese']
+            features['bmi_category'] = pd.cut(features['bmi'], bins=bmi_bins, labels=bmi_labels, right=False)
+            
+            # One-hot encoding BMI kategorileri için
+            bmi_dummies = pd.get_dummies(features['bmi_category'], prefix='bmi')
+            features = pd.concat([features, bmi_dummies], axis=1)
+            features.drop('bmi_category', axis=1, inplace=True)
 
+        # İlaç özelinde özellikler ekle - her ilaç için ayrı bir kolon
+        if 'drug_name' in df.columns:
+            # İlaç adına göre one-hot encoding
+            drug_dummies = pd.get_dummies(df['drug_name'], prefix='drug')
+            features = pd.concat([features, drug_dummies], axis=1)
+        
         # Tıbbi geçmiş özellikleri
         medical_condition_columns = [col for col in df.columns if col.startswith('has_')]
         for col in medical_condition_columns:
@@ -188,23 +242,39 @@ class ModelTrainer:
 
         # İlaç etkileşimleri
         features = self._process_drug_interactions(df, features)
-
+        
+        # Çıktı değişkeni ile korelasyonu düşük olan sütunları kaldır
+        if 'outcome' in df.columns and len(features.columns) > 10:
+            correlations = pd.DataFrame({
+                'feature': features.columns,
+                'correlation': [abs(df['outcome'].corr(features[col])) if features[col].dtype != 'object' else 0 
+                               for col in features.columns]
+            })
+            
+            # En yüksek korelasyonlu özellikleri göster
+            top_features = correlations.sort_values('correlation', ascending=False).head(20)
+            print("Top correlated features:", top_features['feature'].tolist())
+        
         # Kategorik değişkenleri kodla
         categorical_columns = ['patient_sex']
         for col in categorical_columns:
-            if col not in self.label_encoders:
-                self.label_encoders[col] = LabelEncoder()
-            features[col] = self.label_encoders[col].fit_transform(features[col].astype(str))
+            if col in features.columns:  # Sadece hala mevcut olan sütunları dönüştür
+                if col not in self.label_encoders:
+                    self.label_encoders[col] = LabelEncoder()
+                features[col] = self.label_encoders[col].fit_transform(features[col].astype(str))
 
+        # Eksik değerleri doldur
+        features = features.fillna(0)
+        
         # Özellikleri ölçeklendir
-        features = pd.DataFrame(
-            self.scaler.fit_transform(features),
-            columns=features.columns
-        )
+        numeric_cols = features.select_dtypes(include=['float64', 'int64']).columns
+        if not numeric_cols.empty:
+            features[numeric_cols] = self.scaler.fit_transform(features[numeric_cols])
 
         # Hedef değişken
         y = (df['outcome'] >= 2).astype(int)
-
+        
+        print(f"Final feature shape: {features.shape}")
         return features, y
 
     def _handle_missing_values(self, df):
@@ -284,6 +354,10 @@ class ModelTrainer:
             # Özellikleri hazırla
             X, y = self.prepare_features(df)
             
+            # Feature isimlerini kaydet
+            self.feature_names = X.columns.tolist()
+            self.logger.info(f"Feature names: {self.feature_names}")
+            
             # Veriyi böl
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.2, random_state=42
@@ -319,10 +393,14 @@ class ModelTrainer:
             model_path = Path(__file__).parent.parent.parent / 'app' / 'models'
             model_path.mkdir(parents=True, exist_ok=True)
             
+            # Feature isimlerini kaydet
+            self.logger.info(f"Saving model with feature names: {self.feature_names}")
+            
             model_data = {
                 'model': self.model,
                 'scaler': self.scaler,
-                'label_encoders': self.label_encoders
+                'label_encoders': self.label_encoders,
+                'feature_names': self.feature_names  # Feature isimlerini ekle
             }
             
             joblib.dump(model_data, model_path / 'xgboost_model.pkl')

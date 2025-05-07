@@ -48,10 +48,13 @@ class PredictionService:
             self.model = model_data['model']
             self.scaler = model_data['scaler']
             self.label_encoders = model_data['label_encoders']
+            self.feature_names = model_data.get('feature_names', None)  # Feature isimlerini yükle
             
             self.logger.info("Model data loaded successfully")
             self.logger.info(f"Model data keys: {model_data.keys()}")
             self.logger.info(f"Model type: {type(self.model)}")
+            if self.feature_names:
+                self.logger.info(f"Model feature names: {self.feature_names}")
             
             # Model parametrelerini logla
             self.logger.info(f"Model parameters: {self.model.get_params()}")
@@ -138,14 +141,28 @@ class PredictionService:
         try:
             self.logger.info("Starting data preprocessing")
             
+            # Veri anahtarlarını eğitimdeki ile eşleştir
+            mapped_data = patient_data.copy()
+            
+            # Feature isimlerini eğitimdekine uygun olarak dönüştür
+            if 'age' in mapped_data:
+                mapped_data['patient_age'] = mapped_data.pop('age')
+            if 'sex' in mapped_data:
+                mapped_data['patient_sex'] = mapped_data.pop('sex')
+                
+            self.logger.info(f"Mapped data keys: {list(mapped_data.keys())}")
+                
             # Temel özellikleri oluştur
             features = pd.DataFrame({
-                'age': [float(patient_data['age'])],
-                'weight': [float(patient_data['weight'])],
-                'sex': [int(patient_data['sex'])],
-                'serious': [int(patient_data['serious'])],
-                'bmi': [float(patient_data['weight']) / ((float(patient_data['height'])/100) ** 2)]
+                'patient_age': [float(mapped_data['patient_age'])],
+                'weight': [float(mapped_data['weight'])],
+                'patient_sex': [int(mapped_data['patient_sex'])],
+                'serious': [int(mapped_data['serious'])]
             })
+            
+            # BMI hesaplama
+            if 'height' in mapped_data and 'weight' in mapped_data:
+                features['bmi'] = [float(mapped_data['weight']) / ((float(mapped_data['height'])/100) ** 2)]
             
             self.logger.info(f"Created base features DataFrame with shape: {features.shape}")
             self.logger.info(f"Base features columns: {features.columns.tolist()}")
@@ -169,7 +186,7 @@ class PredictionService:
                 'immune_system': ['immune system', 'immunodeficiency', 'autoimmune']
             }
             
-            medical_history = patient_data.get('medical_history', [])
+            medical_history = mapped_data.get('medical_history', [])
             for condition, keywords in medical_conditions.items():
                 features[f'has_{condition}'] = [1 if any(keyword in ' '.join(medical_history).lower() for keyword in keywords) else 0]
             
@@ -198,7 +215,7 @@ class PredictionService:
                 'VitaminD': {'normal_range': (30, 100), 'unit': 'ng/mL'}
             }
             
-            laboratory_tests = patient_data.get('laboratory_tests', [])
+            laboratory_tests = mapped_data.get('laboratory_tests', [])
             for test_name, params in lab_tests.items():
                 test_value = None
                 for test in laboratory_tests:
@@ -210,13 +227,13 @@ class PredictionService:
                         break
                 
                 features[f'{test_name}_exists'] = [1 if test_value is not None else 0]
-                features[f'{test_name}_value'] = [test_value if test_value is not None else None]
+                features[f'{test_name}_value'] = [test_value if test_value is not None else 0]  # 0 ile doldur
                 features[f'{test_name}_normal'] = [1 if test_value is not None and params['normal_range'][0] <= test_value <= params['normal_range'][1] else 0]
             
             self.logger.info(f"Added laboratory test features. Total columns: {features.columns.tolist()}")
             
             # İlaç etkileşimlerini ekle
-            medications = patient_data.get('medications', [])
+            medications = mapped_data.get('medications', [])
             features['interaction_blood_thinner'] = [1 if all(drug in medications for drug in ['aspirin', 'ibuprofen']) else 0]
             features['interaction_blood_sugar'] = [1 if all(drug in medications for drug in ['metformin', 'insulin']) else 0]
             
@@ -224,6 +241,17 @@ class PredictionService:
             
             # Eksik değerleri doldur
             features = features.fillna(0)
+            
+            # Eğer feature isimleri yüklendiyse, sıralamayı eşleştir
+            if self.feature_names is not None:
+                self.logger.info(f"Matching features to model's expected features: {self.feature_names}")
+                # Eksik sütunları 0 ile doldur
+                for col in self.feature_names:
+                    if col not in features.columns:
+                        features[col] = 0
+                # Sadece modelin kullandığı sütunları al
+                features = features[self.feature_names]
+                self.logger.info(f"After matching, features shape: {features.shape}")
             
             # Özellikleri ölçeklendir
             if self.scaler is not None:
@@ -239,6 +267,7 @@ class PredictionService:
             
         except Exception as e:
             self.logger.error(f"Error in data preprocessing: {str(e)}")
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             raise
 
     def _format_prediction_results(self, medication, prediction, probability):

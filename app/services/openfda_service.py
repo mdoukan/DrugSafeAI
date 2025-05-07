@@ -13,31 +13,35 @@ class OpenFDAService:
         self.logger = logging.getLogger(__name__)
         self.timeout = aiohttp.ClientTimeout(total=30)  # 30 saniye timeout
 
-    async def fetch_adverse_events(self, drug_name: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def fetch_adverse_events(self, drug_name: str, limit: int = 1000, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Belirli bir ilaç için yan etki raporlarını OpenFDA API'den çeker
         
         Args:
             drug_name: İlaç adı
             limit: Çekilecek maksimum rapor sayısı
+            offset: Başlangıç noktası (sayfalama için)
             
         Returns:
             List[Dict]: Yan etki raporları listesi
         """
         try:
-            # Son 1 yıllık verileri al
-            one_year_ago = (datetime.now() - timedelta(days=365)).strftime("%Y%m%d")
+            # Son 2 yıllık verileri al (5 yıl yerine)
+            two_years_ago = (datetime.now() - timedelta(days=365*2)).strftime("%Y%m%d")
             
             # URL parametrelerini hazırla
-            search_query = f'patient.drug.medicinalproduct:"{drug_name}"'
+            search_query = f'patient.drug.medicinalproduct:"{drug_name}" AND receivedate:[{two_years_ago} TO 99991231]'
             params = {
                 'api_key': self.api_key,
                 'search': search_query,
-                'limit': limit
+                'limit': limit,
+                'skip': offset
             }
             
             # URL'yi oluştur
             url = f"{self.base_url}?{urlencode(params)}"
+            
+            self.logger.info(f"Fetching data for {drug_name} with limit={limit}, offset={offset}")
             
             async with aiohttp.ClientSession(timeout=self.timeout) as session:
                 async with session.get(url) as response:

@@ -2,6 +2,7 @@ from app import create_app
 import logging
 import sys
 from pathlib import Path
+import joblib
 
 # Configure logging
 logging.basicConfig(
