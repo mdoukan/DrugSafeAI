@@ -160,9 +160,58 @@ class PredictionService:
                 'serious': [int(mapped_data['serious'])]
             })
             
+            # Yaş grupları - ModelTrainer'dakiyle aynı
+            age = float(mapped_data['patient_age'])
+            age_bins = [0, 12, 18, 30, 45, 65, 80, 150]
+            age_labels = ['child', 'teen', 'young_adult', 'adult', 'middle_aged', 'senior', 'elderly']
+            
+            # Age_group değişkenini oluştur ve sonra one-hot encoding yap
+            age_group = None
+            for i in range(len(age_bins)-1):
+                if age_bins[i] <= age < age_bins[i+1]:
+                    age_group = age_labels[i]
+                    break
+            
+            # Manuel olarak tüm age_group_* özelliklerini oluştur ve başlangıçta 0 olarak ayarla
+            for label in age_labels:
+                features[f'age_group_{label}'] = [0]
+            
+            # Eğer bir yaş grubu belirlediyse, o sütunu 1 olarak işaretle
+            if age_group:
+                features[f'age_group_{age_group}'] = [1]
+            
             # BMI hesaplama
             if 'height' in mapped_data and 'weight' in mapped_data:
-                features['bmi'] = [float(mapped_data['weight']) / ((float(mapped_data['height'])/100) ** 2)]
+                height = float(mapped_data['height'])
+                weight = float(mapped_data['weight'])
+                bmi = weight / ((height/100) ** 2)
+                features['bmi'] = [bmi]
+                
+                # BMI kategorileri - ModelTrainer'dakiyle aynı
+                bmi_bins = [0, 18.5, 25, 30, 35, 100]
+                bmi_labels = ['underweight', 'normal', 'overweight', 'obese', 'extremely_obese']
+                
+                # BMI kategori değişkenini oluştur
+                bmi_category = None
+                for i in range(len(bmi_bins)-1):
+                    if bmi_bins[i] <= bmi < bmi_bins[i+1]:
+                        bmi_category = bmi_labels[i]
+                        break
+                
+                # Manuel olarak tüm bmi_* özelliklerini oluştur ve başlangıçta 0 olarak ayarla
+                for label in bmi_labels:
+                    features[f'bmi_{label}'] = [0]
+                
+                # Eğer bir BMI kategorisi belirlediyse, o sütunu 1 olarak işaretle
+                if bmi_category:
+                    features[f'bmi_{bmi_category}'] = [1]
+            
+            # İlaç özelinde özellikler ekle - her ilaç için ayrı bir kolon
+            medications = mapped_data.get('medications', [])
+            # Eğitimde kullanılan tüm ilaçlar için sütunlar oluştur ve 0'la doldur
+            all_drugs = ['aspirin', 'ibuprofen', 'amoxicillin', 'metformin', 'lisinopril', 'atorvastatin', 'fluoxetine', 'omeprazole']
+            for drug in all_drugs:
+                features[f'drug_{drug}'] = [1 if drug in medications else 0]
             
             self.logger.info(f"Created base features DataFrame with shape: {features.shape}")
             self.logger.info(f"Base features columns: {features.columns.tolist()}")
@@ -205,68 +254,76 @@ class PredictionService:
                 'AST': {'normal_range': (10, 40), 'unit': 'U/L'},
                 'Potassium': {'normal_range': (3.5, 5.0), 'unit': 'mEq/L'},
                 'Sodium': {'normal_range': (135, 145), 'unit': 'mEq/L'},
-                'Calcium': {'normal_range': (8.5, 10.2), 'unit': 'mg/dL'},
+                'Calcium': {'normal_range': (8.5, 10.5), 'unit': 'mg/dL'},
                 'Magnesium': {'normal_range': (1.7, 2.2), 'unit': 'mg/dL'},
                 'Phosphorus': {'normal_range': (2.5, 4.5), 'unit': 'mg/dL'},
-                'Bilirubin': {'normal_range': (0.3, 1.2), 'unit': 'mg/dL'},
-                'Albumin': {'normal_range': (3.5, 5.0), 'unit': 'g/dL'},
-                'UricAcid': {'normal_range': (3.4, 7.0), 'unit': 'mg/dL'},
-                'TSH': {'normal_range': (0.4, 4.0), 'unit': 'µIU/mL'},
-                'VitaminD': {'normal_range': (30, 100), 'unit': 'ng/mL'}
+                'Bilirubin': {'normal_range': (0.1, 1.2), 'unit': 'mg/dL'},
+                'Albumin': {'normal_range': (3.4, 5.4), 'unit': 'g/dL'},
+                'UricAcid': {'normal_range': (3.5, 7.2), 'unit': 'mg/dL'},
+                'TSH': {'normal_range': (0.4, 4.0), 'unit': 'mIU/L'},
+                'VitaminD': {'normal_range': (20, 50), 'unit': 'ng/mL'}
             }
             
             laboratory_tests = mapped_data.get('laboratory_tests', [])
-            for test_name, params in lab_tests.items():
-                test_value = None
-                for test in laboratory_tests:
-                    if test.get('testname', '').lower() == test_name.lower():
-                        try:
-                            test_value = float(test.get('testresult', '0').split('/')[0])
-                        except (ValueError, IndexError):
-                            continue
-                        break
+            for lab_name, lab_info in lab_tests.items():
+                # Laboratuvar testi var mı?
+                features[f'{lab_name}_exists'] = [0]
+                # Laboratuvar test değeri normal aralıkta mı?
+                features[f'{lab_name}_normal'] = [0]
+                # Laboratuvar test değeri
+                features[f'{lab_name}_value'] = [0.0]
                 
-                features[f'{test_name}_exists'] = [1 if test_value is not None else 0]
-                features[f'{test_name}_value'] = [test_value if test_value is not None else 0]  # 0 ile doldur
-                features[f'{test_name}_normal'] = [1 if test_value is not None and params['normal_range'][0] <= test_value <= params['normal_range'][1] else 0]
-            
-            self.logger.info(f"Added laboratory test features. Total columns: {features.columns.tolist()}")
+                for lab_test in laboratory_tests:
+                    if lab_name.lower() in lab_test.get('name', '').lower():
+                        features[f'{lab_name}_exists'] = [1]
+                        value = lab_test.get('value', 0)
+                        try:
+                            value = float(value)
+                            features[f'{lab_name}_value'] = [value]
+                            
+                            # Değer normal aralıkta mı?
+                            min_val, max_val = lab_info['normal_range']
+                            features[f'{lab_name}_normal'] = [1 if min_val <= value <= max_val else 0]
+                        except (ValueError, TypeError):
+                            pass
             
             # İlaç etkileşimlerini ekle
-            medications = mapped_data.get('medications', [])
-            features['interaction_blood_thinner'] = [1 if all(drug in medications for drug in ['aspirin', 'ibuprofen']) else 0]
-            features['interaction_blood_sugar'] = [1 if all(drug in medications for drug in ['metformin', 'insulin']) else 0]
+            risky_combinations = {
+                ('aspirin', 'ibuprofen'): 'blood_thinner',
+                ('metformin', 'insulin'): 'blood_sugar',
+            }
             
-            self.logger.info(f"Added drug interaction features. Total columns: {features.columns.tolist()}")
+            for drug_pair, risk_type in risky_combinations.items():
+                features[f'interaction_{risk_type}'] = [1 if all(drug in medications for drug in drug_pair) else 0]
             
-            # Eksik değerleri doldur
+            # Eğer model yüklendiyse ve feature_names özelliği varsa, feature_names'deki tüm özelliklerin
+            # features DataFrame'inde olup olmadığını kontrol et
+            if self.feature_names:
+                self.logger.info("Checking if all model features exist in the processed data")
+                missing_features = [feat for feat in self.feature_names if feat not in features.columns]
+                extra_features = [feat for feat in features.columns if feat not in self.feature_names]
+                
+                if missing_features:
+                    self.logger.warning(f"Missing features: {missing_features}")
+                    for feat in missing_features:
+                        features[feat] = [0]  # Eksik özellikleri varsayılan 0 ile ekle
+                
+                if extra_features:
+                    self.logger.warning(f"Extra features not in model: {extra_features}")
+                    features = features.drop(columns=extra_features)  # Fazla özellikleri kaldır
+                    
+                # Feature sıralamasını model feature_names'ine göre düzenle
+                features = features[self.feature_names]
+            
+            # Eksik değerleri 0 ile doldur
             features = features.fillna(0)
             
-            # Eğer feature isimleri yüklendiyse, sıralamayı eşleştir
-            if self.feature_names is not None:
-                self.logger.info(f"Matching features to model's expected features: {self.feature_names}")
-                # Eksik sütunları 0 ile doldur
-                for col in self.feature_names:
-                    if col not in features.columns:
-                        features[col] = 0
-                # Sadece modelin kullandığı sütunları al
-                features = features[self.feature_names]
-                self.logger.info(f"After matching, features shape: {features.shape}")
-            
-            # Özellikleri ölçeklendir
-            if self.scaler is not None:
-                features = pd.DataFrame(
-                    self.scaler.transform(features),
-                    columns=features.columns
-                )
-            
-            self.logger.info(f"Final features DataFrame shape: {features.shape}")
-            self.logger.info(f"Final features columns: {features.columns.tolist()}")
+            self.logger.info(f"Final processed data shape: {features.shape}")
             
             return features
             
         except Exception as e:
-            self.logger.error(f"Error in data preprocessing: {str(e)}")
+            self.logger.error(f"Error during data preprocessing: {str(e)}")
             self.logger.error(f"Traceback: {traceback.format_exc()}")
             raise
 

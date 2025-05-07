@@ -20,17 +20,16 @@ logger = logging.getLogger(__name__)
 
 async def main():
     try:
-        # İlaç listesi - örnek olarak en yaygın ilaçlar
+        # İlaç listesi - prediction_service ile uyumlu olacak şekilde güncellendi
         drug_list = [
             'aspirin',
             'ibuprofen',
+            'amoxicillin',
             'metformin',
             'lisinopril',
-            'simvastatin',
-            'amiodarone',
-            'warfarin',
-            'insulin',
-            'spironolactone'
+            'atorvastatin',
+            'fluoxetine',
+            'omeprazole'
         ]
         
         # Model trainer'ı başlat
