@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center">Medication Side Effect Prediction</h2>
+            </div>
+            <div class="card-body">
+                <form id="predictionForm">
+                    <!-- Temel Hasta Bilgileri -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="age" class="form-label">Patient Age</label>
+                            <input type="number" class="form-control" id="age" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="weight" class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" id="weight" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="height" class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" id="height" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sex" class="form-label">Patient Sex</label>
+                            <select class="form-select" id="sex" required>
+                                <option value="">Select sex</option>
+                                <option value="1">Male</option>
+                                <option value="2">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="serious">
+                                <label class="form-check-label" for="serious">
+                                    Serious Condition
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tıbbi Geçmiş -->
+                    <div class="mb-3">
+                        <label for="medicalHistory" class="form-label">Medical History</label>
+                        <select class="form-select" id="medicalHistory" multiple>
+                            <option value="Hypertension">Hypertension</option>
+                            <option value="Diabetes">Diabetes</option>
+                            <option value="HeartDisease">Heart Disease</option>
+                            <option value="Asthma">Asthma</option>
+                            <option value="Cancer">Cancer</option>
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple conditions</small>
+                    </div>
+
+                    <!-- İlaçlar -->
+                    <div class="mb-3">
+                        <label for="medications" class="form-label">Medications</label>
+                        <input type="text" class="form-control" id="medications" name="medications"
+                               placeholder="Enter medications separated by commas" required>
+                    </div>
+
+                    <!-- Laboratuvar Testleri -->
+                    <div id="labTests" class="mb-3">
+                        <label class="form-label">Laboratory Tests</label>
+                        <div class="lab-test-container">
+                            <div class="row mb-2 lab-test-row">
+                                <div class="col-md-3">
+                                    <select class="form-select test-name" name="test-name">
+                                        <option value="">Select test</option>
+                                        <option value="BloodPressure">Blood Pressure</option>
+                                        <option value="BloodSugar">Blood Sugar</option>
+                                        <option value="Cholesterol">Cholesterol</option>
+                                        <option value="Hemoglobin">Hemoglobin</option>
+                                        <option value="WhiteBloodCell">White Blood Cell Count</option>
+                                        <option value="Platelets">Platelets</option>
+                                        <option value="Creatinine">Creatinine</option>
+                                        <option value="ALT">ALT (Liver Function)</option>
+                                        <option value="AST">AST (Liver Function)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control test-result" name="test-result" placeholder="Result">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control test-unit" name="test-unit" placeholder="Unit">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-danger remove-test">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="addLabTest">Add Lab Test</button>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Predict Side Effects</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="results" class="mt-4" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Prediction Results</h3>
+                </div>
+                <div class="card-body" id="resultsContent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Hata Mesajı Gösterimi -->
+        <div id="errorMessage" class="mt-4" style="display: none;">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Error</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div id="errorText" class="text-danger"></div>
+                        <button class="btn btn-outline-danger btn-sm" onclick="copyError()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('addLabTest').addEventListener('click', function() {
+    const container = document.querySelector('.lab-test-container');
+    const newRow = document.querySelector('.lab-test-row').cloneNode(true);
+    newRow.querySelectorAll('input, select').forEach(input => input.value = '');
+    container.appendChild(newRow);
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-test')) {
+        const testRows = document.querySelectorAll('.lab-test-row');
+        if (testRows.length > 1) {
+            e.target.closest('.lab-test-row').remove();
+        }
+    }
+});
+
+document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Hide previous error message
+    document.getElementById('errorMessage').style.display = 'none';
+    
+    // Collect laboratory tests
+    const labTests = [];
+    document.querySelectorAll('.lab-test-row').forEach(row => {
+        const testName = row.querySelector('.test-name').value;
+        const testResult = row.querySelector('.test-result').value;
+        const testUnit = row.querySelector('.test-unit').value;
+        if (testName && testResult) {
+            labTests.push({
+                testname: testName,
+                testresult: testResult,
+                testunit: testUnit
+            });
+        }
+    });
+    
+    const formData = {
+        age: document.getElementById('age').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        sex: document.getElementById('sex').value,
+        medications: document.getElementById('medications').value.split(',').map(m => m.trim()),
+        serious: document.getElementById('serious').checked ? 1 : 0,
+        medical_history: Array.from(document.getElementById('medicalHistory').selectedOptions).map(opt => opt.value),
+        laboratory_tests: labTests
+    };
+
+    try {
+        const response = await fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const results = await response.json();
+        
+        if (response.ok) {
+            displayResults(results);
+        } else {
+            showError(results.error || 'An unexpected error occurred');
+        }
+    } catch (error) {
+        showError('Error submitting form: ' + error.message);
+    }
+});
+
+function displayResults(results) {
+    const resultsDiv = document.getElementById('results');
+    const resultsContent = document.getElementById('resultsContent');
+    resultsContent.innerHTML = '';
+
+    if (!results.results || !Array.isArray(results.results)) {
+        showError('Invalid response format');
+        return;
+    }
+
+    results.results.forEach(result => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+        card.innerHTML = `
+            <div class="card-header">
+                <h4>${result.medication}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Risk Level:</strong> 
+                    <span class="badge bg-${result.risk_level === 'High' ? 'danger' : result.risk_level === 'Low' ? 'success' : 'warning'}">
+                        ${result.risk_level}
+                    </span>
+                </p>
+                <p><strong>Probability:</strong> ${(result.probability * 100).toFixed(1)}%</p>
+                <p><strong>Recommendation:</strong> ${result.recommendation}</p>
+            </div>
+        `;
+        resultsContent.appendChild(card);
+    });
+
+    resultsDiv.style.display = 'block';
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    errorText.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function copyError() {
+    const errorText = document.getElementById('errorText').textContent;
+    navigator.clipboard.writeText(errorText).then(() => {
+        alert('Error message copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+</script>
+{% endblock %} 
