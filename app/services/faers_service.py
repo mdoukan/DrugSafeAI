@@ -86,7 +86,7 @@ class FaersService:
             if response.status_code == 200:
                 data = response.json()
                 side_effects = []
-                
+                    
                 # Yan etkileri formatla
                 if 'results' in data:
                     for result in data['results']:
@@ -119,7 +119,7 @@ class FaersService:
         except Exception as e:
             self.logger.error(f"Error fetching side effects for {drug_name}: {str(e)}")
             return self._get_fallback_side_effects(drug_name)
-    
+
     def _determine_severity(self, effect_name):
         """
         Yan etki adına göre şiddet seviyesini belirler
@@ -141,7 +141,7 @@ class FaersService:
             'fatigue', 'pain', 'allergy', 'allergic', 'weakness', 'inflammation', 'edema',
             'swelling', 'dysfunction', 'insufficiency', 'hypertension', 'hypotension',
             'tachycardia', 'bradycardia', 'insomnia', 'depression', 'anxiety', 'confusion'
-        ]
+            ]
         
         # Küçük harfe çevir
         effect_lower = effect_name.lower()

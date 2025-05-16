@@ -919,7 +919,7 @@ class PredictionService:
                             alt_with_risk['risk_improvement'] = f"{risk_improvement:.1f}%"
                         
                         alternatives_with_risk.append(alt_with_risk)
-            else:
+                    else:
                         # Tamamlayıcı tedaviler için risk hesaplaması yapmıyoruz
                         alternatives_with_risk.append(alt)
                 
