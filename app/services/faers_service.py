@@ -106,12 +106,12 @@ class FaersService:
                             'description': self._get_effect_description(effect_name),
                             'recommendation': self._get_recommendation(effect_name, severity)
                         })
-                
+                        
                 # Sonuçları önbelleğe al
                 self.cache[cache_key] = side_effects
                 self.cache_expiry[cache_key] = time.time() + self.cache_duration
-                
-                return side_effects
+                    
+                    return side_effects
             else:
                 self.logger.error(f"API error: {response.status_code} - {response.text}")
                 return self._get_fallback_side_effects(drug_name)
@@ -192,7 +192,7 @@ class FaersService:
         Gerçek bir sistem, klinik veya FDA önerilerine dayalı bir veritabanı kullanmalı
         """
         # Yüksek şiddetli yan etkiler için öneriler
-        if severity == 'High':
+            if severity == 'High':
             return "Stop medication immediately and seek medical attention"
         
         # Özel yan etki önerileri

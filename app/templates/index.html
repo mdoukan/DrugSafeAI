@@ -157,24 +157,6 @@
                         </div>
                     </div>
                     
-                    <!-- İlaç Etkileşim Ağı Görselleştirmesi -->
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Drug Interaction Network</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="drugInteractionNetwork" style="height: 400px; border: 1px solid #ddd; border-radius: 4px;"></div>
-                                    <div class="text-muted small text-center mt-2">
-                                        <p>Network visualization of medication interactions. Hover over connections for interaction details.<br>
-                                        Colors indicate risk level of interactions: red (high risk), orange (medium risk), green (low risk).</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Görsel Yan Etki Raporu -->
                     <div class="row mt-4">
                         <div class="col-md-12">
@@ -270,10 +252,6 @@
 
 <!-- Chart.js (Grafikler için) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- vis.js (İlaç Etkileşim Ağı için) -->
-<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/dist/vis-network.min.css" rel="stylesheet">
 
 <!-- Popper.js (Tooltips için) -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
@@ -715,7 +693,7 @@ function showMedicationDetails(medication) {
         modal.setAttribute('aria-hidden', 'true');
         
         modal.innerHTML = `
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="medicationModalTitle">Medication Details</h5>
@@ -740,31 +718,221 @@ function showMedicationDetails(medication) {
     
     const riskClass = medication.risk_level === 'Low' ? 'text-success' : 
                       medication.risk_level === 'Medium' ? 'text-warning' : 'text-danger';
+    const riskBgClass = medication.risk_level === 'Low' ? 'bg-success' : 
+                      medication.risk_level === 'Medium' ? 'bg-warning' : 'bg-danger';
     
-    modalContent.innerHTML = `
-        <div class="card">
+    // İlaç risk bilgilerini içeren üst kart
+    let riskCardHtml = `
+        <div class="card mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Risk Assessment</h5>
-                    <span class="badge bg-${riskClass.replace('text-', '')}">${medication.risk_level}</span>
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="mb-0">${medication.medication}</h5>
+                        <p class="text-muted small">Category: ${medication.category || 'Not specified'}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex flex-column align-items-end">
+                            <h6>Risk Level</h6>
+                            <span class="badge ${riskBgClass} fs-6">${medication.risk_level} (${Math.round(parseFloat(medication.probability) * 100)}%)</span>
+                        </div>
+                    </div>
                 </div>
                 <hr>
-                <p><strong>Probability:</strong> ${Math.round(parseFloat(medication.probability) * 100)}%</p>
                 <p><strong>Recommendation:</strong> ${medication.recommendation}</p>
+            </div>
+        </div>
+    `;
+    
+    // Alternatif ilaçlar bölümü
+    let alternativesHtml = '';
+    if (medication.alternative_medications && medication.alternative_medications.length > 0) {
+        // Yeni API veri yapısı kategori formatında ise
+        if (Array.isArray(medication.alternative_medications) && medication.alternative_medications[0] && medication.alternative_medications[0].category) {
+            alternativesHtml = `
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Alternative Treatment Options</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="accordion" id="alternativesAccordion">
+            `;
+            
+            // Her kategori için bir sekme oluştur
+            medication.alternative_medications.forEach((category, categoryIndex) => {
+                const categoryId = `category-${categoryIndex}`;
+                const isOpen = categoryIndex === 0 ? 'show' : '';
                 
-                <div class="mt-3">
-                    <h6>Alternative Medications</h6>
-                    ${medication.alternative_medications ? `
-                        <ul class="list-group mt-2">
+                alternativesHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-${categoryId}">
+                            <button class="accordion-button ${categoryIndex !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse-${categoryId}" aria-expanded="${categoryIndex === 0 ? 'true' : 'false'}" 
+                                    aria-controls="collapse-${categoryId}">
+                                <strong>${category.category_name}</strong>
+                            </button>
+                        </h2>
+                        <div id="collapse-${categoryId}" class="accordion-collapse collapse ${isOpen}" 
+                             aria-labelledby="heading-${categoryId}" data-bs-parent="#alternativesAccordion">
+                            <div class="accordion-body p-0">
+                `;
+                
+                // Kategori açıklaması
+                if (category.category === 'complementary') {
+                    alternativesHtml += `
+                        <div class="p-3 bg-light border-bottom">
+                            <p class="text-muted mb-0"><small>Non-pharmacological approaches and lifestyle modifications</small></p>
+                        </div>
+                    `;
+                }
+                
+                // Her alternatif için bir kart oluştur
+                category.alternatives.forEach((alt, altIndex) => {
+                    // Risk seviyesine göre renk belirle
+                    let altRiskClass = 'success';
+                    let altRiskText = 'Low';
+                    
+                    if (alt.risk_level) {
+                        altRiskClass = alt.risk_level === 'Low' ? 'success' : 
+                                      alt.risk_level === 'Medium' ? 'warning' : 'danger';
+                        altRiskText = alt.risk_level;
+                    }
+                    
+                    // Risk iyileştirme göstergesi
+                    let riskImprovementBadge = '';
+                    if (alt.is_lower_risk && alt.risk_improvement) {
+                        riskImprovementBadge = `
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-arrow-down"></i> ${alt.risk_improvement} lower risk
+                            </span>
+                        `;
+                    }
+                    
+                    alternativesHtml += `
+                        <div class="card border-0 rounded-0 mb-0">
+                            <div class="card-body border-bottom">
+                                <div class="row">
+                                    <div class="col-md-7">
+                                        <h6 class="card-title">${alt.name} ${alt.dosage ? `(${alt.dosage})` : ''}</h6>
+                                        <p class="card-text">${alt.description || 'No description available'}</p>
+                    `;
+                    
+                    // Kanıt bilgisi varsa ekle
+                    if (alt.evidence) {
+                        alternativesHtml += `
+                            <div class="mt-2">
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fas fa-book-medical me-1"></i> Evidence: ${alt.evidence}
+                                </span>
+                            </div>
+                        `;
+                    }
+                    
+                    alternativesHtml += `
+                                    </div>
+                    `;
+                    
+                    // Risk karşılaştırma bilgisi varsa ekle (tamamlayıcı tedaviler için ekleme)
+                    if (category.category !== 'complementary' && alt.calculated_risk !== undefined) {
+                        const currentRisk = Math.round(parseFloat(medication.probability) * 100);
+                        const altRisk = Math.round(alt.calculated_risk * 100);
+                        
+                        alternativesHtml += `
+                            <div class="col-md-5">
+                                <div class="card bg-light">
+                                    <div class="card-body p-2">
+                                        <h6 class="text-center mb-2">Risk Comparison</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="badge bg-${riskBgClass}">${medication.medication}</span>
+                                            </div>
+                                            <div class="text-center">vs</div>
+                                            <div>
+                                                <span class="badge bg-${altRiskClass}">${alt.name}</span>
+                                                ${riskImprovementBadge}
+                                            </div>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 25px;">
+                                            <div class="progress-bar bg-${riskBgClass}" role="progressbar" style="width: ${currentRisk}%;" 
+                                                 aria-valuenow="${currentRisk}" aria-valuemin="0" aria-valuemax="100">${currentRisk}%</div>
+                                        </div>
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar bg-${altRiskClass}" role="progressbar" style="width: ${altRisk}%;" 
+                                                 aria-valuenow="${altRisk}" aria-valuemin="0" aria-valuemax="100">${altRisk}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        alternativesHtml += `
+                            <div class="col-md-5">
+                                <div class="text-center mt-2">
+                                    <span class="badge bg-info">Complementary Approach</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    alternativesHtml += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                alternativesHtml += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            alternativesHtml += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        } 
+        // Eski API veri yapısı (düz liste)
+        else {
+            alternativesHtml = `
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Alternative Medications</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
                             ${medication.alternative_medications.map(alt => `
                                 <li class="list-group-item">${alt}</li>
                             `).join('')}
                         </ul>
-                    ` : '<p class="text-muted">No alternatives provided</p>'}
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        alternativesHtml = `
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Alternative Medications</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">No alternatives are available for this medication.</p>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
+    
+    // Tüm içeriği modal'a ekle
+    modalContent.innerHTML = riskCardHtml + alternativesHtml;
+    
+    // Font Awesome ekle (ikonlar için)
+    if (!document.querySelector('link[href*="fontawesome"]')) {
+        const fontAwesomeLink = document.createElement('link');
+        fontAwesomeLink.rel = 'stylesheet';
+        fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fontAwesomeLink);
+    }
     
     // Modal'ı göster
     const bsModal = new bootstrap.Modal(modal);
@@ -1267,7 +1435,17 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             resultsHTML += '<thead><tr><th>Medication</th><th>Risk Level</th><th>Probability</th><th>Recommendation</th></tr></thead>';
             resultsHTML += '<tbody>';
             
-            data.data.results.forEach(result => {
+            // Deduplicate results based on medication name
+            const medicationSet = new Set();
+            const uniqueResults = data.data.results.filter(result => {
+                if (medicationSet.has(result.medication)) {
+                    return false;
+                }
+                medicationSet.add(result.medication);
+                return true;
+            });
+            
+            uniqueResults.forEach(result => {
                 const riskLevel = result.risk_level || 'Unknown';
                 const riskColorClass = riskLevel === 'Low' ? 'text-success' : 
                                       riskLevel === 'Medium' ? 'text-warning' : 'text-danger';
@@ -1288,14 +1466,19 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             document.getElementById('visualizations').style.display = 'block';
             createCharts(data.data);
             
-            // Create drug interaction network if available
-            if (data.data.medications && data.data.drug_interactions) {
-                createDrugInteractionNetwork(data.data.medications, data.data.drug_interactions);
-            }
-            
             // Create anatomy visualization if side effects are available
             if (data.data.side_effects && data.data.side_effects.length > 0) {
-                createAnatomyVisualization(data.data.side_effects);
+                // Deduplicate side effects based on description and body system
+                const uniqueEffectMap = new Map();
+                data.data.side_effects.forEach(effect => {
+                    const key = `${effect.body_system}-${effect.description}`;
+                    if (!uniqueEffectMap.has(key) || effect.severity > uniqueEffectMap.get(key).severity) {
+                        uniqueEffectMap.set(key, effect);
+                    }
+                });
+                
+                const uniqueSideEffects = Array.from(uniqueEffectMap.values());
+                createAnatomyVisualization(uniqueSideEffects);
             }
         } else {
             // No results or error
@@ -1318,105 +1501,6 @@ function copyError() {
     navigator.clipboard.writeText(errorText).then(() => {
         alert('Error message copied to clipboard');
     });
-}
-
-// İlaç Etkileşim Ağı Görselleştirmesi
-function createDrugInteractionNetwork(medications, interactions) {
-    // İlaç düğümleri ve etkileşim bağlantılarını oluştur
-    let nodes = [];
-    let edges = [];
-    
-    // Düğümleri oluştur (her ilaç bir düğüm)
-    medications.forEach((med, index) => {
-      nodes.push({
-        id: index, 
-        label: med.name, 
-        title: `${med.name}<br>Category: ${med.category || 'Unknown'}`,
-        color: {
-          background: '#D2E5FF',
-          border: '#2B7CE9',
-          highlight: {
-            background: '#FFCCCC',
-            border: '#FF0000'
-          }
-        },
-        font: { size: 12 }
-      });
-    });
-    
-    // Bağlantıları oluştur (etkileşimler)
-    interactions.forEach((interaction, index) => {
-      // İlaç indekslerini bul
-      const sourceIndex = medications.findIndex(med => med.name === interaction.source);
-      const targetIndex = medications.findIndex(med => med.name === interaction.target);
-      
-      if (sourceIndex !== -1 && targetIndex !== -1) {
-        // Etkileşim risk seviyesine göre renk
-        let color;
-        let width;
-        
-        if (interaction.severity === 'high') {
-          color = '#FF0000';
-          width = 3;
-        } else if (interaction.severity === 'medium') {
-          color = '#FFA500';
-          width = 2;
-        } else {
-          color = '#00FF00';
-          width = 1;
-        }
-        
-        edges.push({
-          from: sourceIndex,
-          to: targetIndex,
-          title: interaction.description,
-          color: {
-            color: color,
-            highlight: '#FF0000'
-          },
-          width: width,
-          arrows: {
-            to: { enabled: true, scaleFactor: 0.5 }
-          }
-        });
-      }
-    });
-    
-    // Ağ için konteyner
-    const container = document.getElementById('drugInteractionNetwork');
-    
-    // Ağ seçenekleri
-    const options = {
-      nodes: {
-        shape: 'box',
-        margin: 10,
-        widthConstraint: {
-          maximum: 150
-        }
-      },
-      layout: {
-        improvedLayout: true,
-        hierarchical: {
-          enabled: false
-        }
-      },
-      physics: {
-        enabled: true,
-        barnesHut: {
-          gravitationalConstant: -2000,
-          centralGravity: 0.1,
-          springLength: 150,
-          springConstant: 0.05
-        }
-      },
-      interaction: {
-        hover: true,
-        tooltipDelay: 200
-      }
-    };
-    
-    // Ağı oluştur
-    new vis.Network(container, { nodes, edges }, options);
 }
 
 // Görsel Yan Etki Raporu İçin Fonksiyonlar
@@ -1706,76 +1790,6 @@ function getPrescriptionCategory(medicationName) {
     };
     
     return categories[medicationName.toLowerCase()] || 'Unknown';
-}
-
-// İlaç etkileşimlerini oluşturan fonksiyon
-function generateDrugInteractions(medicationList) {
-    const interactionMap = {
-        'warfarin': {
-            'aspirin': { severity: 'high', description: 'Increased risk of bleeding when used together' },
-            'ibuprofen': { severity: 'high', description: 'Increased risk of GI bleeding' },
-            'clopidogrel': { severity: 'high', description: 'Significantly increased risk of bleeding' },
-            'amoxicillin': { severity: 'medium', description: 'Can increase warfarin effects, monitor INR' }
-        },
-        'aspirin': {
-            'ibuprofen': { severity: 'medium', description: 'Reduced cardioprotective effects of aspirin' },
-            'clopidogrel': { severity: 'low', description: 'May increase bleeding risk' }
-        },
-        'lisinopril': {
-            'losartan': { severity: 'high', description: 'Dual RAS blockade, increased risk of kidney problems' },
-            'hydrochlorothiazide': { severity: 'low', description: 'Commonly used together, monitor potassium' }
-        },
-        'fluoxetine': {
-            'sertraline': { severity: 'high', description: 'Risk of serotonin syndrome' }
-        },
-        'simvastatin': {
-            'amlodipine': { severity: 'medium', description: 'Increased risk of myopathy/rhabdomyolysis' },
-            'atorvastatin': { severity: 'medium', description: 'Redundant therapy' }
-        },
-        'metformin': {
-            'insulin': { severity: 'low', description: 'May cause hypoglycemia, but commonly used together' }
-        },
-        'hydrochlorothiazide': {
-            'losartan': { severity: 'low', description: 'Commonly used combination for hypertension' },
-            'amlodipine': { severity: 'low', description: 'May be used together for hypertension' }
-        },
-        'prednisone': {
-            'insulin': { severity: 'medium', description: 'May increase blood glucose levels' },
-            'hydrochlorothiazide': { severity: 'medium', description: 'Increased potassium loss' }
-        }
-    };
-    
-    const interactions = [];
-    
-    // İlaç listesini dönerek olası etkileşimleri bul
-    for (let i = 0; i < medicationList.length; i++) {
-        const drug1 = medicationList[i].toLowerCase();
-        
-        for (let j = i + 1; j < medicationList.length; j++) {
-            const drug2 = medicationList[j].toLowerCase();
-            
-            // Drug1 -> Drug2 etkileşimi
-            if (interactionMap[drug1] && interactionMap[drug1][drug2]) {
-                interactions.push({
-                    source: drug1,
-                    target: drug2,
-                    severity: interactionMap[drug1][drug2].severity,
-                    description: interactionMap[drug1][drug2].description
-                });
-            }
-            // Drug2 -> Drug1 etkileşimi
-            else if (interactionMap[drug2] && interactionMap[drug2][drug1]) {
-                interactions.push({
-                    source: drug2,
-                    target: drug1,
-                    severity: interactionMap[drug2][drug1].severity,
-                    description: interactionMap[drug2][drug1].description
-                });
-            }
-        }
-    }
-    
-    return interactions;
 }
 
 // Genel risk detaylarını göstermek için modal
