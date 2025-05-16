@@ -38,7 +38,7 @@ class PredictionService:
         """Modelin güncellenmesi gerekip gerekmediğini kontrol et"""
         if not self.last_update_time:
             self.logger.info("Model needs update: No last update time available")
-            return True
+            return False  # Update only on demand, not automatically
             
         # 7 gün geçtiyse güncelleme zamanı
         update_interval = 7 * 24 * 60 * 60  # 7 gün (saniye olarak)
@@ -47,9 +47,9 @@ class PredictionService:
         if (current_time - self.last_update_time) > update_interval:
             days_since_update = (current_time - self.last_update_time) / (24 * 60 * 60)
             self.logger.info(f"Model needs update: Last update was {days_since_update:.1f} days ago")
-            return True
+            return False  # Only update manually, not during prediction
             
-        return False
+        return False  # Always return False to prevent automatic updates during prediction
         
     async def update_model_if_needed(self):
         """Gerekirse modeli güncelle"""
@@ -144,22 +144,12 @@ class PredictionService:
             Dict: Tahmin sonuçları
         """
         try:
-            # Model güncellemesi gerekip gerekmediğini kontrol et
-            if self.check_model_update_needed():
-                # Make this synchronous to avoid coroutine serialization issues
-                try:
-                    import asyncio
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    loop.run_until_complete(self.update_model_if_needed())
-                    loop.close()
-                except Exception as e:
-                    self.logger.error(f"Error updating model: {str(e)}")
-                    # Continue with the current model even if update fails
-
+            # Model güncelleme kontrolünü atla - performans için
+            # Bu işlem manuel olarak yapılmalı, her tahmin isteğinde değil
+            
             # Veriyi önişleme
             processed_data = self._preprocess_data(patient_data)
-            if not processed_data:
+            if processed_data is None or processed_data.empty:
                 raise ValueError("Data preprocessing failed")
 
             # İlaç listesini al
@@ -1136,3 +1126,90 @@ class PredictionService:
             pass
             
         return results 
+
+    def _create_feature_vector(self, prediction_data):
+        """
+        Convert prediction data to feature vector compatible with the model
+        """
+        try:
+            # If prediction_data is a DataFrame, use it directly, otherwise create a DataFrame
+            if isinstance(prediction_data, pd.DataFrame):
+                features = prediction_data
+            else:
+                # Convert to DataFrame
+                features = pd.DataFrame(prediction_data, index=[0])
+            
+            # Ensure all required features are present
+            if self.feature_names:
+                missing_features = [feat for feat in self.feature_names if feat not in features.columns]
+                if missing_features:
+                    self.logger.warning(f"Missing features in _create_feature_vector: {missing_features}")
+                    for feat in missing_features:
+                        features[feat] = 0  # Add missing features with default value
+                
+                # Reorder columns to match the feature names order
+                features = features[self.feature_names]
+            
+            # Fill any remaining NaN values
+            features = features.fillna(0)
+            
+            return features
+            
+        except Exception as e:
+            self.logger.error(f"Error in _create_feature_vector: {str(e)}")
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+            # Return empty DataFrame with correct columns as fallback
+            if self.feature_names:
+                return pd.DataFrame(columns=self.feature_names)
+            else:
+                return pd.DataFrame()
+                
+    def _determine_risk_level(self, probability):
+        """
+        Determine risk level based on probability
+        """
+        if probability < 0.40:
+            return 'Low'
+        elif probability < 0.60:
+            return 'Medium'
+        else:
+            return 'High'
+
+    def _suggest_alternatives(self, medication, probability, patient_data):
+        """
+        İlaç için alternatif önerileri sunar
+        
+        Args:
+            medication: İlaç adı
+            probability: Yan etki olasılığı
+            patient_data: Hasta verileri
+            
+        Returns:
+            List: Alternatif ilaç önerileri
+        """
+        # İlaç kategorilerine göre alternatifler
+        alternatives = {
+            'aspirin': ['Acetaminophen (Tylenol)', 'Naproxen'],
+            'ibuprofen': ['Acetaminophen', 'Naproxen', 'Diclofenac'],
+            'amoxicillin': ['Azithromycin', 'Cephalexin', 'Doxycycline'],
+            'metformin': ['Sitagliptin', 'Pioglitazone', 'Lifestyle changes'],
+            'lisinopril': ['Losartan', 'Valsartan', 'Amlodipine'],
+            'atorvastatin': ['Rosuvastatin', 'Pravastatin', 'Simvastatin'],
+            'fluoxetine': ['Sertraline', 'Escitalopram', 'Bupropion'],
+            'omeprazole': ['Pantoprazole', 'Famotidine', 'Lifestyle changes']
+        }
+        
+        # Risk seviyesine göre önerme şekli
+        if probability >= 0.7:
+            message = "Strongly consider alternative: "
+        elif probability >= 0.5:
+            message = "Consider alternative: "
+        else:
+            message = "Possible alternative if needed: "
+        
+        # Önerileri formatla
+        medication_lower = medication.lower()
+        if medication_lower in alternatives:
+            return [f"{message}{alt}" for alt in alternatives[medication_lower]]
+        else:
+            return ["Consult your healthcare provider for alternative options"] 
