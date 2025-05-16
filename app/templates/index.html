@@ -15,22 +15,22 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label for="age" class="form-label">Patient Age</label>
-                            <input type="number" class="form-control" id="age" required>
+                            <input type="number" class="form-control" id="age" name="age" required>
                         </div>
                         <div class="col-md-4">
                             <label for="weight" class="form-label">Weight (kg)</label>
-                            <input type="number" class="form-control" id="weight" required>
+                            <input type="number" class="form-control" id="weight" name="weight" required>
                         </div>
                         <div class="col-md-4">
                             <label for="height" class="form-label">Height (cm)</label>
-                            <input type="number" class="form-control" id="height" required>
+                            <input type="number" class="form-control" id="height" name="height" required>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="sex" class="form-label">Patient Sex</label>
-                            <select class="form-select" id="sex" required>
+                            <select class="form-select" id="sex" name="sex" required>
                                 <option value="">Select sex</option>
                                 <option value="1">Male</option>
                                 <option value="2">Female</option>
@@ -38,7 +38,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-check mt-4">
-                                <input class="form-check-input" type="checkbox" id="serious">
+                                <input class="form-check-input" type="checkbox" id="serious" name="serious">
                                 <label class="form-check-label" for="serious">
                                     Serious Condition
                                 </label>
@@ -49,7 +49,7 @@
                     <!-- Tıbbi Geçmiş -->
                     <div class="mb-3">
                         <label for="medicalHistory" class="form-label">Medical History</label>
-                        <select class="form-select" id="medicalHistory" multiple>
+                        <select class="form-select" id="medicalHistory" name="medical_history" multiple>
                             <option value="Hypertension">Hypertension</option>
                             <option value="Diabetes">Diabetes</option>
                             <option value="HeartDisease">Heart Disease</option>
@@ -186,11 +186,12 @@
                                     <div class="row">
                                         <div class="col-md-7">
                                             <div id="humanAnatomyContainer" style="height: 500px; position: relative;">
-                                                <img src="https://cdn.jsdelivr.net/gh/mdoukan/DrugSafeAI@main/app/static/images/human_anatomy.png" 
+                                                <img src="/static/images/human_anatomy.jpg" 
                                                      id="anatomyImage" 
                                                      class="img-fluid" 
                                                      alt="Human Anatomy" 
-                                                     style="max-height: 500px; margin: 0 auto; display: block;">
+                                                     style="max-height: 500px; margin: 0 auto; display: block;"
+                                                     onerror="handleAnatomyImageError()">
                                                 <!-- Aktif noktalar buraya dinamik olarak eklenecek -->
                                                 <div id="anatomyHotspots"></div>
                                             </div>
@@ -287,6 +288,19 @@ document.getElementById('addLabTest').addEventListener('click', function() {
     newRow.querySelectorAll('input, select').forEach(input => input.value = '');
     container.appendChild(newRow);
 });
+
+// Anatomical image fallback function - Use our static image
+function handleAnatomyImageError() {
+    const img = document.getElementById('anatomyImage');
+    img.src = '/static/images/human_anatomy.jpg';
+    
+    // If the static image also fails, log the error
+    img.onerror = function() {
+        console.error('Failed to load fallback human anatomy image');
+        // As a last resort, try a data URI of a transparent pixel
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    };
+}
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('remove-test')) {
@@ -1162,72 +1176,99 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
     // Hide previous error message
     document.getElementById('errorMessage').style.display = 'none';
     
-    // Collect laboratory tests
-    const labTests = [];
-    document.querySelectorAll('.lab-test-row').forEach(row => {
+    // First show loading indicator
+    const resultsDiv = document.getElementById('results');
+    const resultsContent = document.getElementById('resultsContent');
+    
+    resultsContent.innerHTML = `
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-3">Analyzing medications and patient data...</span>
+        </div>
+    `;
+    resultsDiv.style.display = 'block';
+    
+    // Collect form data using FormData for proper handling
+    const formElement = document.getElementById('predictionForm');
+    const formData = new FormData(formElement);
+    
+    // Need to manually collect medications and medical history from multi-selects
+    const medications = Array.from(document.getElementById('medications').selectedOptions).map(opt => opt.value);
+    const medicalHistory = Array.from(document.getElementById('medicalHistory').selectedOptions).map(opt => opt.value);
+    
+    // Add these to the FormData
+    medications.forEach(med => formData.append('medications', med));
+    medicalHistory.forEach(history => formData.append('medical_history', history));
+    
+    // Manually add the values from input fields
+    formData.append('age', document.getElementById('age').value);
+    formData.append('weight', document.getElementById('weight').value);
+    formData.append('height', document.getElementById('height').value);
+    formData.append('sex', document.getElementById('sex').value);
+    formData.append('serious', document.getElementById('serious').checked ? 'on' : 'off');
+    
+    // Add lab tests
+    const labRows = document.querySelectorAll('.lab-test-row');
+    labRows.forEach((row, index) => {
         const testName = row.querySelector('.test-name').value;
         const testResult = row.querySelector('.test-result').value;
         const testUnit = row.querySelector('.test-unit').value;
+        
         if (testName && testResult) {
-            labTests.push({
-                testname: testName,
-                testresult: testResult,
-                testunit: testUnit
-            });
+            formData.append(`lab-name-${index}`, testName);
+            formData.append(`lab-value-${index}`, testResult);
+            if (testUnit) {
+                formData.append(`lab-unit-${index}`, testUnit);
+            }
         }
     });
     
-    const formData = {
-        age: document.getElementById('age').value,
-        weight: document.getElementById('weight').value,
-        height: document.getElementById('height').value,
-        sex: document.getElementById('sex').value,
-        medications: Array.from(document.getElementById('medications').selectedOptions).map(opt => opt.value),
-        serious: document.getElementById('serious').checked ? 1 : 0,
-        medical_history: Array.from(document.getElementById('medicalHistory').selectedOptions).map(opt => opt.value),
-        laboratory_tests: labTests
-    };
-
     try {
-        // UI geri bildirimi
+        // UI feedback
         const submitButton = document.querySelector('button[type="submit"]');
         const originalButtonText = submitButton.innerHTML;
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> İşleniyor...';
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
         submitButton.disabled = true;
         
+        // Make sure visualization section is hidden until we have results
+        document.getElementById('visualizations').style.display = 'none';
+        
+        // Send form data directly
         const response = await fetch('/predict', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+            body: formData
         });
-
-        // UI geri bildirimini sıfırla
+        
+        // Reset UI 
         submitButton.innerHTML = originalButtonText;
         submitButton.disabled = false;
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'An error occurred during prediction');
-        }
-        
+        // Handle response
         const data = await response.json();
         console.log('Prediction results:', data);
         
-        // Render results
-        const resultsDiv = document.getElementById('results');
-        const resultsContent = document.getElementById('resultsContent');
+        if (data.status === 'error') {
+            // Show error message
+            document.getElementById('errorText').textContent = data.message || 'An error occurred during prediction';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            return;
+        }
+        
+        // Clear results content for new results
         resultsContent.innerHTML = '';
-
-        if (data.results && data.results.length > 0) {
-            // Önce düz tabloyu oluştur
+        
+        // Format and display results
+        if (data.status === 'success' && data.data && data.data.results && data.data.results.length > 0) {
+            // Create results table
             let resultsHTML = '<div class="table-responsive"><table class="table table-striped">';
             resultsHTML += '<thead><tr><th>Medication</th><th>Risk Level</th><th>Probability</th><th>Recommendation</th></tr></thead>';
             resultsHTML += '<tbody>';
             
-            data.results.forEach(result => {
-                const riskLevel = determineRiskLevel(parseFloat(result.probability));
+            data.data.results.forEach(result => {
+                const riskLevel = result.risk_level || 'Unknown';
                 const riskColorClass = riskLevel === 'Low' ? 'text-success' : 
                                       riskLevel === 'Medium' ? 'text-warning' : 'text-danger';
                 
@@ -1243,9 +1284,21 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             resultsContent.innerHTML = resultsHTML;
             resultsDiv.style.display = 'block';
             
-            // Grafikleri oluştur
-            createCharts(data);
+            // Create charts and visualizations with the data
+            document.getElementById('visualizations').style.display = 'block';
+            createCharts(data.data);
+            
+            // Create drug interaction network if available
+            if (data.data.medications && data.data.drug_interactions) {
+                createDrugInteractionNetwork(data.data.medications, data.data.drug_interactions);
+            }
+            
+            // Create anatomy visualization if side effects are available
+            if (data.data.side_effects && data.data.side_effects.length > 0) {
+                createAnatomyVisualization(data.data.side_effects);
+            }
         } else {
+            // No results or error
             resultsContent.innerHTML = '<div class="alert alert-warning">No prediction results returned.</div>';
             resultsDiv.style.display = 'block';
             document.getElementById('visualizations').style.display = 'none';
@@ -1253,7 +1306,7 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
         
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('errorText').textContent = error.message;
+        document.getElementById('errorText').textContent = error.message || 'An unexpected error occurred';
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('results').style.display = 'none';
         document.getElementById('visualizations').style.display = 'none';
@@ -1371,37 +1424,37 @@ function createAnatomyVisualization(sideEffects) {
     const bodySystems = {
       'Cardiovascular': {
         name: 'Cardiovascular System',
-        position: { x: 50, y: 35, radius: 30 },
+        position: { x: 50, y: 30, radius: 20 },
         effects: []
       },
       'Respiratory': {
         name: 'Respiratory System',
-        position: { x: 50, y: 25, radius: 25 },
+        position: { x: 50, y: 22, radius: 15 },
         effects: []
       },
       'Gastrointestinal': {
         name: 'Gastrointestinal System',
-        position: { x: 50, y: 50, radius: 30 },
+        position: { x: 50, y: 45, radius: 18 },
         effects: []
       },
       'Nervous': {
         name: 'Nervous System',
-        position: { x: 50, y: 10, radius: 25 },
+        position: { x: 50, y: 12, radius: 12 },
         effects: []
       },
       'Musculoskeletal': {
         name: 'Musculoskeletal System',
-        position: { x: 70, y: 60, radius: 25 },
+        position: { x: 60, y: 55, radius: 25 },
         effects: []
       },
       'Dermatologic': {
         name: 'Skin',
-        position: { x: 30, y: 45, radius: 40 },
+        position: { x: 35, y: 40, radius: 25 },
         effects: []
       },
       'Hematologic': {
         name: 'Blood',
-        position: { x: 80, y: 35, radius: 15 },
+        position: { x: 70, y: 35, radius: 12 },
         effects: []
       }
     };
@@ -1506,12 +1559,13 @@ function createAnatomyHotspots(bodySystems) {
       hotspot.style.width = `${radius * 2}px`;
       hotspot.style.height = `${radius * 2}px`;
       hotspot.style.position = 'absolute';
-      hotspot.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
+      hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
       hotspot.style.borderRadius = '50%';
       hotspot.style.transform = 'translate(-50%, -50%)';
       hotspot.style.cursor = 'pointer';
-      hotspot.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
+      hotspot.style.boxShadow = '0 0 0 2px rgba(255, 255, 255, 0.8)';
       hotspot.style.transition = 'all 0.3s ease';
+      hotspot.style.zIndex = '100';
       
       // Yan etki sayısını göster
       const count = system.effects.length;
@@ -1519,18 +1573,19 @@ function createAnatomyHotspots(bodySystems) {
       
       const badge = document.createElement('div');
       badge.style.position = 'absolute';
-      badge.style.top = '-5px';
-      badge.style.right = '-5px';
-      badge.style.backgroundColor = severity > 0.6 ? 'red' : (severity > 0.3 ? 'orange' : 'green');
+      badge.style.top = '-8px';
+      badge.style.right = '-8px';
+      badge.style.backgroundColor = severity > 0.6 ? '#dc3545' : (severity > 0.3 ? '#fd7e14' : '#28a745');
       badge.style.color = 'white';
       badge.style.borderRadius = '50%';
-      badge.style.width = '24px';
-      badge.style.height = '24px';
+      badge.style.width = '26px';
+      badge.style.height = '26px';
       badge.style.display = 'flex';
       badge.style.justifyContent = 'center';
       badge.style.alignItems = 'center';
-      badge.style.fontSize = '12px';
+      badge.style.fontSize = '14px';
       badge.style.fontWeight = 'bold';
+      badge.style.border = '2px solid white';
       badge.textContent = count;
       
       hotspot.appendChild(badge);
@@ -1542,11 +1597,13 @@ function createAnatomyHotspots(bodySystems) {
       
       // Hover efekti
       hotspot.addEventListener('mouseenter', () => {
-        hotspot.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
+        hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.7)';
+        hotspot.style.boxShadow = '0 0 0 4px rgba(255, 255, 255, 0.9)';
       });
       
       hotspot.addEventListener('mouseleave', () => {
-        hotspot.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
+        hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
+        hotspot.style.boxShadow = '0 0 0 2px rgba(255, 255, 255, 0.8)';
       });
       
       container.appendChild(hotspot);

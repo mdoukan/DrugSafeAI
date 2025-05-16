@@ -51,7 +51,7 @@ class PredictionService:
             
         return False  # Always return False to prevent automatic updates during prediction
         
-    async def update_model_if_needed(self):
+    def update_model_if_needed(self):
         """Gerekirse modeli güncelle"""
         if self.check_model_update_needed():
             self.logger.info("Initiating model update process")
@@ -71,7 +71,7 @@ class PredictionService:
                     ]
                 
                 # Modeli güncelle
-                updated, result = await trainer.check_and_update_model()
+                updated, result = trainer.check_and_update_model()
                 
                 if updated:
                     self.logger.info("Model was updated. Reloading model...")
@@ -175,6 +175,10 @@ class PredictionService:
                 
                 # Sonuçları formatla
                 formatted_result = self._format_prediction_results(medication, prediction, probability)
+                
+                # Generate side effects for visualization
+                formatted_result['side_effects'] = self._generate_sample_side_effects(medication, probability, formatted_result['risk_level'])
+                
                 results.append(formatted_result)
                 
             # İlaç-koşul etkileşimlerini kontrol et
@@ -210,7 +214,22 @@ class PredictionService:
             # İlaç bilgilerini oluştur
             medication_info = []
             for med in medications:
-                medication_info.append(med)
+                category = self._get_medication_category(med)
+                medication_info.append({
+                    'name': med,
+                    'category': category
+                })
+            
+            # İlaç etkileşimlerini format
+            formatted_interactions = []
+            for interaction in interactions:
+                if 'drugs' in interaction and len(interaction['drugs']) >= 2:
+                    formatted_interactions.append({
+                        'source': interaction['drugs'][0],
+                        'target': interaction['drugs'][1],
+                        'severity': interaction['severity'].lower(),
+                        'description': interaction['description']
+                    })
             
             # Sonuçları döndür
             return {
@@ -219,7 +238,7 @@ class PredictionService:
                     'results': results,
                     'medications': medication_info,
                     'side_effects': all_side_effects,
-                    'drug_interactions': interactions,
+                    'drug_interactions': formatted_interactions,
                     'highest_risk': str(highest_risk),
                     'riskiest_medication': riskiest_medication
                 }
@@ -503,12 +522,16 @@ class PredictionService:
             # Get alternative medications through the helper method
             alternative_meds = self._get_alternative_recommendations(medication, risk_level, probability)
             
+            # Generate sample side effects for visualization
+            side_effects = self._generate_sample_side_effects(medication, probability, risk_level)
+            
             result = {
                 'medication': medication,
                 'risk_level': risk_level,
                 'probability': probability,
                 'recommendation': recommendation,
-                'alternative_medications': alternative_meds
+                'alternative_medications': alternative_meds,
+                'side_effects': side_effects
             }
             
             self.logger.info(f"Formatted result: {result}")
@@ -518,6 +541,100 @@ class PredictionService:
             self.logger.error(f"Error in _format_prediction_results: {str(e)}")
             self.logger.error(f"Traceback: {traceback.format_exc()}")
             raise
+            
+    def _generate_sample_side_effects(self, medication, probability, risk_level):
+        """Generate sample side effects for visualization"""
+        medication_lower = medication.lower()
+        
+        # Common side effects for medications
+        side_effects_db = {
+            'aspirin': [
+                {'name': 'Stomach Upset', 'probability': 0.45, 'severity': 0.5, 
+                 'description': 'Stomach irritation or discomfort', 
+                 'recommendation': 'Take with food to reduce stomach upset'},
+                {'name': 'Bleeding', 'probability': 0.30, 'severity': 0.8, 
+                 'description': 'Increased risk of bleeding due to blood thinning properties', 
+                 'recommendation': 'Stop medication and consult doctor if unusual bleeding occurs'},
+                {'name': 'Heartburn', 'probability': 0.25, 'severity': 0.3, 
+                 'description': 'Burning sensation in chest', 
+                 'recommendation': 'Take with plenty of water'}
+            ],
+            'ibuprofen': [
+                {'name': 'Stomach Pain', 'probability': 0.40, 'severity': 0.5,
+                 'description': 'Pain or discomfort in stomach', 
+                 'recommendation': 'Take with food to reduce stomach irritation'},
+                {'name': 'Dizziness', 'probability': 0.20, 'severity': 0.5,
+                 'description': 'Feeling lightheaded or unsteady', 
+                 'recommendation': 'Avoid driving or operating machinery if affected'},
+                {'name': 'Headache', 'probability': 0.15, 'severity': 0.3,
+                 'description': 'Pain in the head or temples', 
+                 'recommendation': 'Usually temporary; consult doctor if persistent'}
+            ],
+            'amoxicillin': [
+                {'name': 'Diarrhea', 'probability': 0.35, 'severity': 0.5,
+                 'description': 'Loose, watery stools', 
+                 'recommendation': 'Stay hydrated and consult doctor if severe'},
+                {'name': 'Rash', 'probability': 0.25, 'severity': 0.5,
+                 'description': 'Skin eruption or discoloration', 
+                 'recommendation': 'Stop medication and contact doctor immediately'},
+                {'name': 'Nausea', 'probability': 0.20, 'severity': 0.3,
+                 'description': 'Feeling of sickness with an inclination to vomit', 
+                 'recommendation': 'Take with food to reduce nausea'}
+            ],
+            'metformin': [
+                {'name': 'Digestive Issues', 'probability': 0.50, 'severity': 0.5,
+                 'description': 'Nausea, vomiting, or diarrhea', 
+                 'recommendation': 'Take with meals to minimize digestive effects'},
+                {'name': 'Vitamin B12 Deficiency', 'probability': 0.15, 'severity': 0.4,
+                 'description': 'Long-term use may lead to vitamin B12 deficiency', 
+                 'recommendation': 'Regular blood tests recommended for long-term use'},
+                {'name': 'Lactic Acidosis', 'probability': 0.05, 'severity': 0.9,
+                 'description': 'Rare but serious metabolic complication', 
+                 'recommendation': 'Seek immediate medical attention if experiencing unusual muscle pain, trouble breathing, or unusual tiredness'}
+            ],
+            'lisinopril': [
+                {'name': 'Dry Cough', 'probability': 0.55, 'severity': 0.4,
+                 'description': 'Persistent, tickling cough', 
+                 'recommendation': 'Consult doctor about switching to an ARB if cough is bothersome'},
+                {'name': 'Dizziness', 'probability': 0.25, 'severity': 0.5,
+                 'description': 'Lightheadedness, especially when standing up quickly', 
+                 'recommendation': 'Rise slowly from sitting or lying positions'},
+                {'name': 'Hyperkalemia', 'probability': 0.15, 'severity': 0.7,
+                 'description': 'Elevated potassium levels in blood', 
+                 'recommendation': 'Regular blood tests and avoid high-potassium foods'}
+            ]
+        }
+        
+        # Default side effects if medication not in database
+        default_side_effects = [
+            {'name': f'Common Side Effect of {medication}', 'probability': 0.30, 'severity': 0.5,
+             'description': f'Commonly reported side effect with {medication}', 
+             'recommendation': 'Monitor and consult doctor if persistent'},
+            {'name': f'Less Common Side Effect of {medication}', 'probability': 0.20, 'severity': 0.4,
+             'description': f'Less frequently reported side effect with {medication}', 
+             'recommendation': 'Usually resolves without intervention'},
+            {'name': f'Rare Side Effect of {medication}', 'probability': 0.10, 'severity': 0.7,
+             'description': f'Rare but potentially serious side effect of {medication}', 
+             'recommendation': 'Seek medical attention if experienced'}
+        ]
+        
+        # Get side effects for the medication or use defaults
+        side_effects = side_effects_db.get(medication_lower, default_side_effects)
+        
+        # Adjust probabilities based on overall risk level
+        risk_multiplier = 1.0
+        if risk_level == 'High':
+            risk_multiplier = 1.3
+        elif risk_level == 'Medium':
+            risk_multiplier = 1.1
+        else:
+            risk_multiplier = 0.9
+            
+        # Apply the risk multiplier to each side effect
+        for effect in side_effects:
+            effect['probability'] = min(effect['probability'] * risk_multiplier, 0.95)
+            
+        return side_effects
 
     def _get_alternative_recommendations(self, drug_name, risk_level, probability):
         """
@@ -891,23 +1008,23 @@ class PredictionService:
         
         return results
 
-    def _generate_recommendation(self, medication, probability, risk_level, data):
+    def _generate_recommendation(self, medication, probability, patient_data):
         """Risk seviyesine göre ilaç önerileri üretir"""
         # DataFrame'den scalar değerler çıkar
-        age = data.get('patient_age', 0)
+        age = patient_data.get('patient_age', 0)
         # DataFrame ise ilk değeri al
         if hasattr(age, 'iloc'):
             age = age.iloc[0]
         else:
             age = float(age)
             
-        sex = data.get('patient_sex', 0)
+        sex = patient_data.get('patient_sex', 0)
         if hasattr(sex, 'iloc'):
             sex = sex.iloc[0]
         else:
             sex = int(sex)
             
-        serious = data.get('serious', 0)
+        serious = patient_data.get('serious', 0)
         if hasattr(serious, 'iloc'):
             serious = serious.iloc[0]
         else:
@@ -1200,4 +1317,26 @@ class PredictionService:
         if medication_lower in alternatives:
             return [f"{message}{alt}" for alt in alternatives[medication_lower]]
         else:
-            return ["Consult your healthcare provider for alternative options"] 
+            return ["Consult your healthcare provider for alternative options"]
+
+    def _get_medication_category(self, medication_name):
+        """İlaç kategorisini belirle"""
+        categories = {
+            'aspirin': 'NSAID',
+            'ibuprofen': 'NSAID',
+            'acetaminophen': 'Analgesic',
+            'amoxicillin': 'Antibiotic',
+            'metformin': 'Antidiabetic',
+            'lisinopril': 'ACE Inhibitor',
+            'atorvastatin': 'Statin',
+            'fluoxetine': 'SSRI',
+            'omeprazole': 'PPI',
+            'warfarin': 'Anticoagulant',
+            'simvastatin': 'Statin',
+            'clopidogrel': 'Antiplatelet',
+            'losartan': 'ARB',
+            'amlodipine': 'Calcium Channel Blocker',
+            'levothyroxine': 'Thyroid Hormone'
+        }
+        
+        return categories.get(medication_name.lower(), 'Unknown') 

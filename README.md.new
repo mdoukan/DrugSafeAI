@@ -18,7 +18,7 @@ DrugSafeAI is an advanced clinical decision support system that uses AI to predi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/mdoukan/DrugSafeAI.git
+git clone https://github.com/yourusername/DrugSafeAI.git
 cd DrugSafeAI
 ```
 
@@ -81,13 +81,16 @@ Content-Type: application/json
 }
 ```
 
-## Key Visualizations
+## Screenshots
+
+### Risk Assessment Dashboard
+![Risk Assessment](screenshots/risk_assessment.png)
 
 ### Drug Interaction Network
-The application visualizes medication interactions through an interactive network diagram, displaying potential interactions between multiple medications and their severity levels.
+![Drug Interactions](screenshots/drug_interactions.png)
 
 ### Anatomical Side Effect Visualization
-DrugSafeAI includes an interactive human anatomy visualization that highlights body systems affected by potential side effects, providing an intuitive way for healthcare providers to communicate risks to patients.
+![Side Effects](screenshots/side_effects.png)
 
 ## Technologies Used
 
@@ -100,7 +103,6 @@ DrugSafeAI includes an interactive human anatomy visualization that highlights b
 - vis.js for network visualization
 - Bootstrap 5 for UI
 - OpenFDA API for medication data
-- FAERS (FDA Adverse Event Reporting System) for evidence-based risk analysis
 
 ## License
 

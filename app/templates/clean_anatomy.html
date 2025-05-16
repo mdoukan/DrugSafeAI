@@ -1,0 +1,48 @@
+<!-- Görsel Yan Etki Raporu -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Visual Side Effect Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div id="humanAnatomyContainer" style="height: 500px; position: relative;">
+                            <img src="/static/images/human_anatomy.jpg" 
+                                 id="anatomyImage" 
+                                 class="img-fluid" 
+                                 alt="Human Anatomy" 
+                                 style="max-height: 500px; margin: 0 auto; display: block;"
+                                 onerror="handleAnatomyImageError()">
+                            <!-- Aktif noktalar buraya dinamik olarak eklenecek -->
+                            <div id="anatomyHotspots"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">Body System Effects</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="bodySystems" class="list-group">
+                                    <!-- Sistem sınıfları buraya dinamik olarak eklenecek -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mt-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0" id="selectedBodyPartTitle">Select a body part to see side effects</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="bodyPartSideEffects">
+                                    <p class="text-muted">Click on a body part or system to see possible side effects.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
