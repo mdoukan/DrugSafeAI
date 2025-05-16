@@ -112,44 +112,67 @@ def generate_sample_side_effects(medication):
 @main.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json()
+        # İstek JSON formatında mı yoksa form verileri mi kontrol et
+        if request.is_json:
+            data = request.get_json()
+        else:
+            # Form verilerini işle
+            data = {}
+            # Temel hasta verileri
+            try:
+                data['age'] = float(request.form.get('age', 0))
+                data['weight'] = float(request.form.get('weight', 0))
+                data['height'] = float(request.form.get('height', 0))
+                data['sex'] = int(request.form.get('sex', 0))
+                data['serious'] = 1 if request.form.get('serious') == 'on' else 0
+            except (ValueError, TypeError) as e:
+                logger.error(f"Error parsing form data: {str(e)}")
+                return jsonify({'status': 'error', 'message': f'Invalid form data: {str(e)}'}), 400
+                
+            # İlaçlar
+            medications = request.form.getlist('medications')
+            data['medications'] = medications
+            
+            # Tıbbi geçmiş
+            medical_history = request.form.getlist('medical_history')
+            if medical_history:
+                data['medical_history'] = medical_history
+                
+            # Laboratuvar testleri
+            lab_tests = []
+            # Form'dan laboratuvar test verilerini işle (formatta: lab_name, lab_value şeklinde)
+            # Örnek: lab-name-0=BloodPressure&lab-value-0=120
+            i = 0
+            while f'lab-name-{i}' in request.form and f'lab-value-{i}' in request.form:
+                name = request.form.get(f'lab-name-{i}')
+                value = request.form.get(f'lab-value-{i}')
+                if name and value:
+                    lab_tests.append({
+                        'name': name,
+                        'value': value
+                    })
+                i += 1
+            
+            if lab_tests:
+                data['laboratory_tests'] = lab_tests
+        
         logger.info(f"Received prediction request with data: {data}")
         
         if not data:
             logger.error("No data received in request")
-            return jsonify({'error': 'No data provided'}), 400
+            return jsonify({'status': 'error', 'message': 'No data provided'}), 400
             
         # Validate required fields
         required_fields = ['age', 'weight', 'height', 'sex', 'medications', 'serious']
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             logger.error(f"Missing required fields: {missing_fields}")
-            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-            
-        # Validate data types
-        try:
-            data['age'] = float(data['age'])
-            data['weight'] = float(data['weight'])
-            data['height'] = float(data['height'])
-            data['sex'] = int(data['sex'])
-            data['serious'] = int(data['serious'])
-        except (ValueError, TypeError) as e:
-            logger.error(f"Invalid data type: {str(e)}")
-            return jsonify({'error': 'Invalid data type for numeric fields'}), 400
+            return jsonify({'status': 'error', 'message': f'Missing required fields: {", ".join(missing_fields)}'}), 400
             
         # Validate medications
-        if not isinstance(data.get('medications', []), list):
-            logger.error("Medications must be a list")
-            return jsonify({'error': 'Medications must be a list'}), 400
-            
-        # Validate optional fields if present
-        if 'medical_history' in data and not isinstance(data['medical_history'], list):
-            logger.error("Medical history must be a list")
-            return jsonify({'error': 'Medical history must be a list'}), 400
-            
-        if 'laboratory_tests' in data and not isinstance(data['laboratory_tests'], list):
-            logger.error("Laboratory tests must be a list")
-            return jsonify({'error': 'Laboratory tests must be a list'}), 400
+        if not isinstance(data.get('medications', []), list) or not data.get('medications', []):
+            logger.error("Medications must be a non-empty list")
+            return jsonify({'status': 'error', 'message': 'Please select at least one medication'}), 400
             
         # Make prediction
         try:
@@ -159,9 +182,9 @@ def predict():
         except Exception as e:
             logger.error(f"Error during prediction: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")
-            return jsonify({'error': f'Prediction error: {str(e)}'}), 500
+            return jsonify({'status': 'error', 'message': f'Prediction error: {str(e)}'}), 500
             
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500 
+        return jsonify({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}), 500 

@@ -155,102 +155,74 @@ class PredictionService:
             # İlaç listesini al
             medications = patient_data.get('medications', [])
             if not medications:
-                raise ValueError("No medications provided for prediction")
-
-            # Her ilaç için tahmin yap
-            results = []
-            for medication in medications:
-                self.logger.info(f"Predicting for medication: {medication}")
+                raise ValueError("No medications provided")
                 
-                # İlacı veri işleme için ekle
-                prediction_data = processed_data.copy()
-                prediction_data['medication'] = medication
-                
-                # Feature vektörünü oluştur
-                features = self._create_feature_vector(prediction_data)
-                
-                # Tahmin yap
-                probability = self.model.predict_proba(features)[0][1]
-                
-                # Risk seviyesini belirle
-                risk_level = self._determine_risk_level(probability)
-                
-                # İlaç önerisi oluştur
-                recommendation = self._generate_recommendation(medication, probability, risk_level, prediction_data)
-                
-                # Alternatif ilaçlar
-                alternatives = self._suggest_alternatives(medication, probability, patient_data)
-                
-                # Sonucu ekle
-                results.append({
-                    'medication': medication,
-                    'probability': str(probability),
-                    'risk_level': risk_level,
-                    'recommendation': recommendation,
-                    'alternative_medications': alternatives
-                })
-            
             # İlaç etkileşimlerini kontrol et
             interactions = self._check_drug_interactions(medications, patient_data)
-            interaction_risk = 0.0
             
-            # Etkileşimleri sonuçlara ekle
-            if interactions:
-                # Etkileşim olduğunda risk faktörünü hesapla
-                interaction_risk = self._calculate_interaction_risk(interactions)
+            # Her bir ilaç için yan etkileri tahmin et
+            results = []
+            for medication in medications:
+                # Vektörü oluştur
+                feature_vector = self._create_feature_vector(processed_data)
                 
-                # Etkileşimleri sonuca ekle
-                for result in results:
-                    # İlgili ilaç etkileşimde mi kontrol et
-                    medication = result['medication']
-                    med_interactions = [i for i in interactions if medication in i['drugs']]
-                    
-                    if med_interactions:
-                        # Orjinal olasılık değerini al
-                        probability = float(result['probability'])
-                        
-                        # Etkileşim faktörünü uygula (artırarak)
-                        # Ciddi etkileşimlerde %5-15 arası riski artır
-                        adjusted_probability = min(probability * (1 + interaction_risk), 0.95)
-                        
-                        # Güncellenmiş değeri kaydet
-                        result['probability'] = str(adjusted_probability)
-                        
-                        # Risk seviyesini güncelle
-                        result['risk_level'] = self._determine_risk_level(adjusted_probability)
-                        
-                        # Öneriyi güncelle
-                        result['recommendation'] += f" CAUTION: This medication interacts with other prescribed medications, increasing risk by approximately {int(interaction_risk*100)}%."
+                # Model ile tahmin yap
+                prediction = self.model.predict(feature_vector)[0]
+                if hasattr(self.model, "predict_proba"):
+                    probability = self.model.predict_proba(feature_vector)[0][1]
+                else:
+                    probability = 0.5
+                
+                # Sonuçları formatla
+                formatted_result = self._format_prediction_results(medication, prediction, probability)
+                results.append(formatted_result)
+                
+            # İlaç-koşul etkileşimlerini kontrol et
+            if 'medical_history' in patient_data:
+                results = self._adjust_for_medical_conditions(results, patient_data.get('medical_history', []), patient_data)
+                
+            # Laboratuvar değerlerine göre düzelt
+            if 'laboratory_tests' in patient_data:
+                results = self._adjust_for_lab_values(results, patient_data.get('laboratory_tests', []), patient_data)
+                
+            # Yaşa göre düzelt
+            if 'age' in patient_data:
+                results = self._adjust_for_age(results, patient_data.get('age', 0))
             
-            # Hastalık koşullarına göre risk faktörlerini hesapla
-            medical_history = patient_data.get('medical_history', [])
-            if medical_history:
-                results = self._adjust_for_medical_conditions(results, medical_history, patient_data)
-            
-            # Laboratuvar değerlerine göre düzeltmeler
-            lab_tests = patient_data.get('laboratory_tests', [])
-            if lab_tests:
-                results = self._adjust_for_lab_values(results, lab_tests, patient_data)
-            
-            # Yaş faktörü düzeltmesi
-            results = self._adjust_for_age(results, patient_data.get('age', 0))
-            
-            # En riskli ilacı bul
+            # En riskli ilacı ve genel risk seviyesini belirle
             highest_risk = 0.0
             riskiest_medication = None
             
             for result in results:
-                probability = float(result['probability'])
-                if probability > highest_risk:
-                    highest_risk = probability
-                    riskiest_medication = result['medication']
+                if float(result['probability']) > highest_risk:
+                    highest_risk = float(result['probability'])
+                    riskiest_medication = result
             
+            # FAERS servisinden yan etkileri al ve katapısal olarak grupla
+            all_side_effects = []
+            for result in results:
+                side_effects = result.get('side_effects', [])
+                for effect in side_effects:
+                    # İlaç bilgisini yan etkiye ekle
+                    effect['medication'] = result['medication']
+                    all_side_effects.append(effect)
+            
+            # İlaç bilgilerini oluştur
+            medication_info = []
+            for med in medications:
+                medication_info.append(med)
+            
+            # Sonuçları döndür
             return {
-                'results': results,
-                'highest_risk': str(highest_risk),
-                'riskiest_medication': riskiest_medication,
-                'has_interactions': len(interactions) > 0,
-                'interactions': interactions
+                'status': 'success',
+                'data': {
+                    'results': results,
+                    'medications': medication_info,
+                    'side_effects': all_side_effects,
+                    'drug_interactions': interactions,
+                    'highest_risk': str(highest_risk),
+                    'riskiest_medication': riskiest_medication
+                }
             }
 
         except Exception as e:
