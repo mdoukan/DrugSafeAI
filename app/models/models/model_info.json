@@ -1,0 +1,332 @@
+{
+    "model_type": "<class 'app.models.train_model.MedicationAwareModelWrapper'>",
+    "feature_names": [
+        "patient_age",
+        "weight",
+        "patient_sex",
+        "serious",
+        "age_group_child",
+        "age_group_teen",
+        "age_group_young_adult",
+        "age_group_adult",
+        "age_group_middle_aged",
+        "age_group_senior",
+        "age_group_elderly",
+        "bmi",
+        "bmi_underweight",
+        "bmi_normal",
+        "bmi_overweight",
+        "bmi_obese",
+        "bmi_extremely_obese",
+        "drug_amoxicillin",
+        "drug_atorvastatin",
+        "drug_fluoxetine",
+        "drug_lisinopril",
+        "drug_metformin",
+        "drug_omeprazole",
+        "interaction_amoxicillin_child",
+        "interaction_amoxicillin_teen",
+        "interaction_amoxicillin_young_adult",
+        "interaction_amoxicillin_adult",
+        "interaction_amoxicillin_middle_aged",
+        "interaction_amoxicillin_senior",
+        "interaction_amoxicillin_elderly",
+        "interaction_metformin_child",
+        "interaction_metformin_teen",
+        "interaction_metformin_young_adult",
+        "interaction_metformin_adult",
+        "interaction_metformin_middle_aged",
+        "interaction_metformin_senior",
+        "interaction_metformin_elderly",
+        "interaction_lisinopril_child",
+        "interaction_lisinopril_teen",
+        "interaction_lisinopril_young_adult",
+        "interaction_lisinopril_adult",
+        "interaction_lisinopril_middle_aged",
+        "interaction_lisinopril_senior",
+        "interaction_lisinopril_elderly",
+        "interaction_atorvastatin_child",
+        "interaction_atorvastatin_teen",
+        "interaction_atorvastatin_young_adult",
+        "interaction_atorvastatin_adult",
+        "interaction_atorvastatin_middle_aged",
+        "interaction_atorvastatin_senior",
+        "interaction_atorvastatin_elderly",
+        "interaction_fluoxetine_child",
+        "interaction_fluoxetine_teen",
+        "interaction_fluoxetine_young_adult",
+        "interaction_fluoxetine_adult",
+        "interaction_fluoxetine_middle_aged",
+        "interaction_fluoxetine_senior",
+        "interaction_fluoxetine_elderly",
+        "interaction_omeprazole_child",
+        "interaction_omeprazole_teen",
+        "interaction_omeprazole_young_adult",
+        "interaction_omeprazole_adult",
+        "interaction_omeprazole_middle_aged",
+        "interaction_omeprazole_senior",
+        "interaction_omeprazole_elderly",
+        "serious_with_amoxicillin",
+        "serious_with_metformin",
+        "serious_with_lisinopril",
+        "serious_with_atorvastatin",
+        "serious_with_fluoxetine",
+        "serious_with_omeprazole",
+        "interaction_blood_thinner",
+        "interaction_blood_sugar"
+    ],
+    "last_update_time": null,
+    "drug_list": [
+        "aspirin",
+        "ibuprofen",
+        "amoxicillin",
+        "metformin",
+        "lisinopril",
+        "atorvastatin",
+        "fluoxetine",
+        "omeprazole"
+    ],
+    "model_parameters": {
+        "objective": "binary:logistic",
+        "use_label_encoder": null,
+        "base_score": null,
+        "booster": null,
+        "callbacks": null,
+        "colsample_bylevel": null,
+        "colsample_bynode": null,
+        "colsample_bytree": 0.8,
+        "early_stopping_rounds": 10,
+        "enable_categorical": false,
+        "eval_metric": "auc",
+        "feature_types": null,
+        "gamma": 0,
+        "gpu_id": null,
+        "grow_policy": null,
+        "importance_type": null,
+        "interaction_constraints": null,
+        "learning_rate": 0.1,
+        "max_bin": null,
+        "max_cat_threshold": null,
+        "max_cat_to_onehot": null,
+        "max_delta_step": null,
+        "max_depth": 5,
+        "max_leaves": null,
+        "min_child_weight": 1,
+        "missing": NaN,
+        "monotone_constraints": null,
+        "n_estimators": 100,
+        "n_jobs": null,
+        "num_parallel_tree": null,
+        "predictor": null,
+        "random_state": 42,
+        "reg_alpha": null,
+        "reg_lambda": null,
+        "sampling_method": null,
+        "scale_pos_weight": 1,
+        "subsample": 0.8,
+        "tree_method": null,
+        "validate_parameters": null,
+        "verbosity": null,
+        "risk_corrections": {
+            "aspirin": {
+                "base_prob": 0.37,
+                "serious_factor": 0.25,
+                "age_factor": 0.008,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "FDA Adverse Event Reporting System & Published Clinical Studies",
+                "common_effects": [
+                    "Gastrointestinal bleeding",
+                    "Peptic ulcer",
+                    "Tinnitus"
+                ],
+                "contraindications": [
+                    "Hemophilia",
+                    "Active peptic ulcer",
+                    "Salicylate allergy"
+                ],
+                "interactions": [
+                    "Warfarin",
+                    "Other NSAIDs",
+                    "Corticosteroids",
+                    "ACE inhibitors"
+                ],
+                "risk_margin": 0.05
+            },
+            "ibuprofen": {
+                "base_prob": 0.32,
+                "serious_factor": 0.2,
+                "age_factor": 0.007,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "NEJM Meta-analysis & Cochrane Review 2021",
+                "common_effects": [
+                    "Stomach pain",
+                    "Heartburn",
+                    "Edema",
+                    "Hypertension"
+                ],
+                "contraindications": [
+                    "Heart failure",
+                    "Liver cirrhosis",
+                    "Kidney failure"
+                ],
+                "interactions": [
+                    "Aspirin",
+                    "Warfarin",
+                    "ACE inhibitors",
+                    "Diuretics"
+                ],
+                "risk_margin": 0.05
+            },
+            "amoxicillin": {
+                "base_prob": 0.2,
+                "serious_factor": 0.1,
+                "age_factor": 0.003,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "Clinical Infectious Diseases Journal & FDA Data",
+                "common_effects": [
+                    "Diarrhea",
+                    "Rash",
+                    "Nausea"
+                ],
+                "contraindications": [
+                    "Penicillin allergy",
+                    "History of amoxicillin-associated jaundice"
+                ],
+                "interactions": [
+                    "Allopurinol",
+                    "Probenecid",
+                    "Oral contraceptives"
+                ],
+                "risk_margin": 0.05
+            },
+            "metformin": {
+                "base_prob": 0.3,
+                "serious_factor": 0.05,
+                "age_factor": 0.005,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "American Diabetes Association & Lancet Diabetes Review",
+                "common_effects": [
+                    "Gastrointestinal discomfort",
+                    "Vitamin B12 deficiency",
+                    "Lactic acidosis"
+                ],
+                "contraindications": [
+                    "Kidney disease",
+                    "Liver disease",
+                    "Alcoholism"
+                ],
+                "interactions": [
+                    "Furosemide",
+                    "Nifedipine",
+                    "Cimetidine",
+                    "Contrast agents"
+                ],
+                "risk_margin": 0.05
+            },
+            "lisinopril": {
+                "base_prob": 0.28,
+                "serious_factor": 0.15,
+                "age_factor": 0.006,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "New England Journal of Medicine & Hypertension Research",
+                "common_effects": [
+                    "Dry cough",
+                    "Dizziness",
+                    "Hyperkalemia",
+                    "Angioedema"
+                ],
+                "contraindications": [
+                    "Pregnancy",
+                    "History of angioedema",
+                    "Bilateral renal artery stenosis"
+                ],
+                "interactions": [
+                    "NSAIDs",
+                    "Potassium supplements",
+                    "Lithium"
+                ],
+                "risk_margin": 0.05
+            },
+            "atorvastatin": {
+                "base_prob": 0.22,
+                "serious_factor": 0.1,
+                "age_factor": 0.004,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "American Heart Association & JAMA Cardiology Reports",
+                "common_effects": [
+                    "Muscle pain",
+                    "Liver enzyme elevation",
+                    "Digestive problems"
+                ],
+                "contraindications": [
+                    "Liver disease",
+                    "Pregnancy",
+                    "Breastfeeding"
+                ],
+                "interactions": [
+                    "Macrolide antibiotics",
+                    "Cyclosporine",
+                    "Gemfibrozil",
+                    "Grapefruit juice"
+                ],
+                "risk_margin": 0.05
+            },
+            "fluoxetine": {
+                "base_prob": 0.35,
+                "serious_factor": 0.2,
+                "age_factor": 0.003,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "American Psychiatric Association & Journal of Psychopharmacology",
+                "common_effects": [
+                    "Insomnia",
+                    "Nausea",
+                    "Headache",
+                    "Sexual dysfunction"
+                ],
+                "contraindications": [
+                    "MAO inhibitor use",
+                    "History of QT prolongation"
+                ],
+                "interactions": [
+                    "Tramadol",
+                    "MAO inhibitors",
+                    "Lithium",
+                    "Triptans"
+                ],
+                "risk_margin": 0.05
+            },
+            "omeprazole": {
+                "base_prob": 0.18,
+                "serious_factor": 0.05,
+                "age_factor": 0.002,
+                "confidence_factor": 1.0,
+                "evidence_level": "High",
+                "source": "Gastroenterology Journal & FDA Adverse Events Database",
+                "common_effects": [
+                    "Headache",
+                    "Nausea",
+                    "Vitamin B12 deficiency",
+                    "Magnesium deficiency"
+                ],
+                "contraindications": [
+                    "Hypersensitivity to proton pump inhibitors"
+                ],
+                "interactions": [
+                    "Clopidogrel",
+                    "Methotrexate",
+                    "Digoxin",
+                    "Iron supplements"
+                ],
+                "risk_margin": 0.05
+            }
+        },
+        "model_type": "MedicationAwareModelWrapper"
+    }
+}
