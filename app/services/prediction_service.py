@@ -921,9 +921,25 @@ class PredictionService:
 
     def _generate_recommendation(self, medication, probability, risk_level, data):
         """Risk seviyesine göre ilaç önerileri üretir"""
-        age = data.get('age', 0)
-        sex = data.get('sex', 0)
+        # DataFrame'den scalar değerler çıkar
+        age = data.get('patient_age', 0)
+        # DataFrame ise ilk değeri al
+        if hasattr(age, 'iloc'):
+            age = age.iloc[0]
+        else:
+            age = float(age)
+            
+        sex = data.get('patient_sex', 0)
+        if hasattr(sex, 'iloc'):
+            sex = sex.iloc[0]
+        else:
+            sex = int(sex)
+            
         serious = data.get('serious', 0)
+        if hasattr(serious, 'iloc'):
+            serious = serious.iloc[0]
+        else:
+            serious = int(serious)
         
         # Yüksek risk
         if risk_level == 'High':
