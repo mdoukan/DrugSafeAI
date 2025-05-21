@@ -3,53 +3,59 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="text-center">Medication Side Effect Prediction</h2>
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow-soft rounded-4">
+            <div class="card-header text-center bg-pink rounded-top">
+                <h2>Medication Side Effect Prediction</h2>
             </div>
             <div class="card-body">
-                <form id="predictionForm">
-                    <!-- Temel Hasta Bilgileri -->
-                    <div class="row mb-3">
+                <form id="predictionForm" action="/predict" method="post" novalidate>
+                    <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label for="age" class="form-label">Patient Age</label>
-                            <input type="number" class="form-control" id="age" name="age" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="weight" class="form-label">Weight (kg)</label>
-                            <input type="number" class="form-control" id="weight" name="weight" required>
+                            <label for="age" class="form-label">🎂 Age</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="age" name="age" required min="0" max="120" />
+                                <span class="input-group-text">years</span>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label for="height" class="form-label">Height (cm)</label>
-                            <input type="number" class="form-control" id="height" name="height" required>
+                            <label for="weight" class="form-label">⚖️ Weight</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="weight" name="weight" required min="0" max="300" />
+                                <span class="input-group-text">kg</span>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="sex" class="form-label">Patient Sex</label>
-                            <select class="form-select" id="sex" name="sex" required>
-                                <option value="">Select sex</option>
-                                <option value="1">Male</option>
-                                <option value="2">Female</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check mt-4">
-                                <input class="form-check-input" type="checkbox" id="serious" name="serious">
-                                <label class="form-check-label" for="serious">
-                                    Serious Condition
-                                </label>
+                        <div class="col-md-4">
+                            <label for="height" class="form-label">📏 Height</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="height" name="height" required min="0" max="250" />
+                                <span class="input-group-text">cm</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tıbbi Geçmiş -->
                     <div class="mb-3">
-                        <label for="medicalHistory" class="form-label">Medical History</label>
-                        <select class="form-select" id="medicalHistory" name="medical_history" multiple>
+                        <label for="sex" class="form-label">👥 Gender</label>
+                            <select class="form-select" id="sex" name="sex" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="1">👨🏼 Male</option>
+                            <option value="2">👩🏼 Female</option>
+                            </select>
+                        </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="serious" name="serious">
+                                <label class="form-check-label" for="serious">
+                                🌸 Serious Condition
+                                </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="medicalHistory" class="form-label">📋 Medical History</label>
+                        <select multiple class="form-select" id="medicalHistory" name="medical_history">
                             <option value="Hypertension">Hypertension</option>
                             <option value="Diabetes">Diabetes</option>
                             <option value="HeartDisease">Heart Disease</option>
@@ -59,10 +65,9 @@
                         <small class="text-muted">Hold Ctrl/Cmd to select multiple conditions</small>
                     </div>
 
-                    <!-- İlaçlar -->
-                    <div class="mb-3">
-                        <label for="medications" class="form-label">Medications</label>
-                        <select class="form-select" id="medications" name="medications" multiple required>
+                    <div class="mb-4">
+                        <label for="medications" class="form-label">💊 Medications</label>
+                        <select multiple class="form-select" id="medications" name="medications">
                             <option value="aspirin">Aspirin</option>
                             <option value="ibuprofen">Ibuprofen</option>
                             <option value="amoxicillin">Amoxicillin</option>
@@ -77,11 +82,11 @@
 
                     <!-- Laboratuvar Testleri -->
                     <div id="labTests" class="mb-3">
-                        <label class="form-label">Laboratory Tests</label>
+                        <label class="form-label">🔬 Laboratory Tests</label>
                         <div class="lab-test-container">
                             <div class="row mb-2 lab-test-row">
                                 <div class="col-md-3">
-                                    <select class="form-select test-name" name="test-name">
+                                    <select class="form-select test-name" name="test-name" title="Test Name" aria-label="Test Name">
                                         <option value="">Select test</option>
                                         <option value="BloodPressure">Blood Pressure</option>
                                         <option value="BloodSugar">Blood Sugar</option>
@@ -95,10 +100,10 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control test-result" name="test-result" placeholder="Result">
+                                    <input type="text" class="form-control test-result" name="test-result" placeholder="Result" aria-label="Test Result">
                                 </div>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control test-unit" name="test-unit" placeholder="Unit">
+                                    <input type="text" class="form-control test-unit" name="test-unit" placeholder="Unit" aria-label="Test Unit">
                                 </div>
                                 <div class="col-md-3">
                                     <button type="button" class="btn btn-danger remove-test">Remove</button>
@@ -108,15 +113,27 @@
                         <button type="button" class="btn btn-secondary" id="addLabTest">Add Lab Test</button>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Predict Side Effects</button>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-pink px-5">
+                            🌼 Predict Side Effects
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
 
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;">
+            <h4 class="alert-heading">Error!</h4>
+            <p id="errorText"></p>
+            <button class="btn btn-sm btn-danger" onclick="copyError()">Copy Error Message</button>
+        </div>
+
+        <!-- Prediction Results -->
         <div id="results" class="mt-4" style="display: none;">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Prediction Results</h3>
+            <div class="card shadow-soft rounded-4">
+                <div class="card-header text-center bg-pink rounded-top">
+                    <h3>Prediction Results</h3>
                 </div>
                 <div class="card-body" id="resultsContent">
                 </div>
@@ -125,9 +142,9 @@
 
         <!-- Veri Görselleştirme Kartı -->
         <div id="visualizations" class="mt-4" style="display: none;">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Risk Visualizations</h3>
+            <div class="card shadow-soft rounded-4">
+                <div class="card-header text-center bg-pink rounded-top">
+                    <h3>Risk Visualizations</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -161,7 +178,7 @@
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header bg-pink">
                                     <h5 class="mb-0">Visual Side Effect Report</h5>
                                 </div>
                                 <div class="card-body">
@@ -180,7 +197,7 @@
                                         </div>
                                         <div class="col-md-5">
                                             <div class="card">
-                                                <div class="card-header bg-primary text-white">
+                                                <div class="card-header bg-pink text-white">
                                                     <h6 class="mb-0">Body System Effects</h6>
                                                 </div>
                                                 <div class="card-body">
@@ -190,7 +207,7 @@
                                                 </div>
                                             </div>
                                             <div class="card mt-3">
-                                                <div class="card-header bg-info text-white">
+                                                <div class="card-header bg-pink text-white">
                                                     <h6 class="mb-0" id="selectedBodyPartTitle">Select a body part to see side effects</h6>
                                                 </div>
                                                 <div class="card-body">
@@ -208,34 +225,18 @@
                 </div>
             </div>
         </div>
-
-        <!-- Hata Mesajı Gösterimi -->
-        <div id="errorMessage" class="mt-4" style="display: none;">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">Error</h4>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div id="errorText" class="text-danger"></div>
-                        <button class="btn btn-outline-danger btn-sm" onclick="copyError()">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 
         <!-- Risk Details Modal -->
-        <div class="modal fade" id="riskDetailsModal" tabindex="-1" aria-labelledby="riskDetailsModalLabel" aria-hidden="true">
+<div class="modal fade" id="riskDetailsModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="riskDetailsModalLabel">Detailed Risk Assessment</h5>
+                <h5 class="modal-title">Detailed Risk Assessment</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" id="riskDetailsContent">
-                        <!-- Content will be dynamically generated -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -243,1108 +244,28 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
+{% endblock %}
 
-<!-- Bootstrap CSS ve JS (gerekli bağımlılıklar) -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Chart.js (Grafikler için) -->
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Popper.js (Tooltips için) -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
-document.getElementById('addLabTest').addEventListener('click', function() {
-    const container = document.querySelector('.lab-test-container');
-    const newRow = document.querySelector('.lab-test-row').cloneNode(true);
-    newRow.querySelectorAll('input, select').forEach(input => input.value = '');
-    container.appendChild(newRow);
-});
-
-// Anatomical image fallback function - Use our static image
-function handleAnatomyImageError() {
-    const img = document.getElementById('anatomyImage');
-    img.src = '/static/images/human_anatomy.jpg';
+// Make sure the form submission is handled correctly
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('predictionForm');
+    if (!form) return;
     
-    // If the static image also fails, log the error
-    img.onerror = function() {
-        console.error('Failed to load fallback human anatomy image');
-        // As a last resort, try a data URI of a transparent pixel
-        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    };
-}
-
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-test')) {
-        const testRows = document.querySelectorAll('.lab-test-row');
-        if (testRows.length > 1) {
-            e.target.closest('.lab-test-row').remove();
-        }
-    }
-});
-
-// Charts global görünümleri ayarla
-Chart.defaults.font.family = "'Poppins', 'Helvetica', 'Arial', sans-serif";
-Chart.defaults.font.size = 12;
-Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-
-// Global olarak risk değerlerini tutan değişken
-let globalRiskData = {};
-
-// Grafikleri oluştur
-function createCharts(data) {
-    // Veri görselleştirme alanını göster
-    document.getElementById('visualizations').style.display = 'block';
+    // Setup Lab Test Add/Remove functionality
+    setupLabTestControls();
     
-    // Grafikleri temizle
-    destroyCharts();
-    
-    // İlk işlem olarak tüm ilaçlar için tutarlı risk değerleri hesapla
-    calculateConsistentRiskValues(data);
-    
-    // Genel risk grafiği (Gauge)
-    createRiskGauge(data);
-    
-    // İlaç risk karşılaştırma grafiği
-    createMedicationRisksChart(data);
-    
-    // API'den yan etki verilerini al ve grafiğini oluştur
-    fetchSideEffects(data.results.map(med => med.medication))
-        .then(sideEffectsData => {
-            createSideEffectsChart(data, sideEffectsData);
-        })
-        .catch(error => {
-            console.error('Error fetching side effects:', error);
-            // Hata durumunda örnek verilerle oluştur
-            createSideEffectsChart(data, null);
-        });
-}
-
-// Tutarlı risk değerleri hesapla
-function calculateConsistentRiskValues(data) {
-    globalRiskData = {};
-    
-    // Verilerin tutarlı şekilde işlenmesini sağla
-    const medications = data.results.map(med => med.medication);
-    
-    // Backend uyumsuzluğunu yakalamak için
-    console.log("Original risk data from backend:", data.results);
-    
-    // İlk ilacın temel olasılık değerini referans olarak kullan
-    const baselineProb = data.results.length > 0 ? parseFloat(data.results[0].probability) : 0.5;
-    
-    // İlaçların sayısına göre farklı varyasyonlar hesapla
-    const variationFactors = [];
-    for (let i = 0; i < medications.length; i++) {
-        if (i === 0) {
-            variationFactors.push(1.0); // İlk ilaç için tam değer
-        } else {
-            // Farklı ilaçlar için bu örnekte %5-15 arası varyasyon yaratıyoruz
-            // Hashmaps gibi sabit varyasyon oluşturucu bir fonksiyon kullanılabilir
-            const nameHash = medications[i].split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-            const normalizedHash = (nameHash % 10) / 100 + 0.05; // 0.05 - 0.15 arası değerler üret
-            variationFactors.push(1.0 - normalizedHash);
-        }
-    }
-    
-    console.log("Variation factors:", variationFactors);
-    
-    data.results.forEach((med, index) => {
-        // Temel olasılık değeri
-        let baseProb = parseFloat(med.probability);
+    // Add an explicit event listener for form submission
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
         
-        // Her ilaç için varyasyon uygula - tutarlı bir değer sağlamak için 
-        // rastgelelik yerine ilaç adına dayalı varyasyon kullan
-        let adjustedProb = baseProb * variationFactors[index];
-        
-        // Mantıklı sınırlar içinde tut
-        adjustedProb = Math.max(Math.min(adjustedProb, 0.95), 0.15);
-        
-        // Risk seviyesi belirle - UI tutarlılığı için
-        let riskLevel = determineRiskLevel(adjustedProb);
-        
-        // Risk rengini hesapla
-        const riskColor = getRiskColor(riskLevel, adjustedProb);
-        
-        // Global veride sakla
-        globalRiskData[med.medication] = {
-            medication: med.medication,
-            originalProbability: baseProb,
-            adjustedProbability: adjustedProb,
-            riskLevel: riskLevel,
-            riskColor: riskColor,
-            recommendation: med.recommendation,
-            alternatives: med.alternative_medications || []
-        };
-    });
-    
-    console.log("Calculated risk data:", globalRiskData);
-    
-    // Ayrıca tablo verilerini de güncelle - DOM manipülasyonu
-    updatePredictionResultsTable();
-}
-
-// Risk seviyesini belirleyen yardımcı fonksiyon
-function determineRiskLevel(probability) {
-    if (probability > 0.60) {
-        return 'High';
-    } else if (probability > 0.40) {
-        return 'Medium';
-    } else {
-        return 'Low';
-    }
-}
-
-// Prediction Results tablosunu güncelle
-function updatePredictionResultsTable() {
-    const resultRows = document.querySelectorAll('#resultsContent table tbody tr');
-    
-    resultRows.forEach(row => {
-        const medicationCell = row.querySelector('td:first-child');
-        const probabilityCell = row.querySelector('td:nth-child(3)');
-        const riskLevelCell = row.querySelector('td:nth-child(2)');
-        
-        if (medicationCell) {
-            const medication = medicationCell.textContent.trim();
-            if (globalRiskData[medication]) {
-                const riskInfo = globalRiskData[medication];
-                
-                // Olasılık değerini güncelle
-                if (probabilityCell) {
-                    probabilityCell.textContent = Math.round(riskInfo.adjustedProbability * 100) + '%';
-                }
-                
-                // Risk seviyesini güncelle
-                if (riskLevelCell) {
-                    const riskColorClass = riskInfo.riskLevel === 'Low' ? 'text-success' : 
-                                         riskInfo.riskLevel === 'Medium' ? 'text-warning' : 'text-danger';
-                    
-                    riskLevelCell.innerHTML = `<strong class="${riskColorClass}">${riskInfo.riskLevel}</strong>`;
-                }
-            }
-        }
-    });
-}
-
-// Risk renkleri için yardımcı fonksiyon
-function getRiskColor(risk, probability = null) {
-    // Temel risk renkleri
-    const baseRiskColors = {
-        'Low': '#28a745',     // Yeşil
-        'Medium': '#ffc107',  // Sarı
-        'High': '#fd7e14',    // Turuncu
-        'Very High': '#dc3545' // Kırmızı
-    };
-    
-    // Eğer olasılık değeri verilmişse, daha hassas renk derecelendirmesi yap
-    if (probability !== null) {
-        if (risk === 'Low') {
-            // Yeşil tonları (açıktan koyuya)
-            const greenValue = Math.round(175 - probability * 30);
-            return `rgb(40, ${greenValue}, 69)`;
-        } else if (risk === 'Medium') {
-            // Sarı-turuncu tonları
-            const redValue = Math.round(255 - probability * 20);
-            const greenValue = Math.round(193 - probability * 40);
-            return `rgb(${redValue}, ${greenValue}, 7)`;
-        } else if (risk === 'High' || risk === 'Very High') {
-            // Turuncu-kırmızı tonları
-            const redValue = Math.round(220 + probability * 35);
-            const greenValue = Math.round(65 - probability * 45);
-            return `rgb(${redValue}, ${greenValue}, 20)`;
-        }
-    }
-    
-    return baseRiskColors[risk] || '#6c757d'; // Varsayılan gri
-}
-
-// Risk Gauge grafiği oluştur
-function createRiskGauge(data) {
-    // Tüm ilaçlardan en yüksek riski hesapla
-    let highestRiskProbability = 0;
-    let overallRiskLevel = 'Low';
-    let riskiestMedication = null;
-    
-    // Her ilaç için global risk verisini kullan
-    data.results.forEach(med => {
-        const riskInfo = globalRiskData[med.medication];
-        if (riskInfo && riskInfo.adjustedProbability > highestRiskProbability) {
-            highestRiskProbability = riskInfo.adjustedProbability;
-            overallRiskLevel = riskInfo.riskLevel;
-            riskiestMedication = med;
-        }
-    });
-    
-    // Risk rengini belirle
-    const riskColor = getRiskColor(overallRiskLevel, highestRiskProbability);
-    
-    const ctx = document.getElementById('riskGauge').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Risk Level', ''],
-            datasets: [{
-                data: [highestRiskProbability * 100, 100 - (highestRiskProbability * 100)],
-                backgroundColor: [
-                    riskColor,
-                    '#e9ecef'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            circumference: 180,
-            rotation: 270,
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            if (context.dataIndex === 0) {
-                                return [
-                                    `Risk Level: ${overallRiskLevel}`,
-                                    `Probability: ${Math.round(highestRiskProbability * 100)}%`,
-                                    `Medication: ${riskiestMedication?.medication || 'Unknown'}`,
-                                    `Click for more information`
-                                ];
-                            }
-                            return '';
-                        }
-                    }
-                }
-            },
-            elements: {
-                center: {
-                    text: `${Math.round(highestRiskProbability * 100)}%`,
-                    color: riskColor,
-                    fontStyle: 'Arial',
-                    sidePadding: 20
-                }
-            },
-            onClick: () => {
-                if (riskiestMedication) {
-                    showRiskDetails(data.results, riskiestMedication, overallRiskLevel, highestRiskProbability);
-                }
-            }
-        }
-    });
-    
-    // Risk seviyesi metnini göster
-    const centerConfig = {
-        id: 'centerText',
-        beforeDraw: function(chart) {
-            if (chart.config.type === 'doughnut') {
-                // Get ctx from chart
-                const ctx = chart.ctx;
-
-                // Get options from the center object in options
-                const centerConfig = chart.config.options.center;
-                if (centerConfig) {
-                    const fontStyle = centerConfig.fontStyle || 'Arial';
-                    const txt = centerConfig.text;
-                    const color = centerConfig.color || '#000';
-                    const fontSize = centerConfig.fontSize || 25;
-
-                    // Set center text
-                    ctx.font = fontSize + "px " + fontStyle;
-                    ctx.fillStyle = color;
-
-                    // Get text width and height
-                    const textWidth = ctx.measureText(txt).width;
-                    const textHeight = fontSize;
-
-                    // Calculate position
-                    const centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
-                    const centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
-
-                    // Draw text in center
-                    ctx.fillText(txt, centerX - textWidth / 2, centerY + textHeight / 4);
-                }
-            }
-        }
-    };
-    
-    // En riskli ilacın bilgilerini kaydet
-    chart.riskDetails = {
-        level: overallRiskLevel,
-        probability: highestRiskProbability,
-        medication: riskiestMedication
-    };
-    
-    Chart.register(centerConfig);
-}
-
-// İlaç risk karşılaştırma grafiği oluştur
-function createMedicationRisksChart(data) {
-    const labels = data.results.map(med => med.medication);
-    
-    // Global risk verilerini kullan
-    const probabilities = data.results.map(med => 
-        globalRiskData[med.medication].adjustedProbability * 100
-    );
-    
-    const backgroundColors = data.results.map(med => 
-        globalRiskData[med.medication].riskColor
-    );
-    
-    // Grafik verilerini daha incelikli farklılaştırmak için biraz daha çeşitlilik kat
-    const adjustedProbabilities = probabilities.map((prob, index) => {
-        // Bara daha küçük rastgele bir varyasyon ekle (±%2)
-        const smallVariation = (Math.random() * 4 - 2);
-        
-        // İlk ilaç için tam değeri koru, diğerleri için varyasyon uygula
-        if (index === 0) {
-            return prob;
-        } else {
-            // Grafiksel farklılaştırma - bu sadece görsellik için
-            return Math.max(Math.min(prob - smallVariation, 95), 20);
-        }
-    });
-    
-    const ctx = document.getElementById('medicationRisksChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Risk Percentage',
-                data: adjustedProbabilities,
-                backgroundColor: backgroundColors,
-                borderColor: backgroundColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Risk Percentage (%)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Medications'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                // Risk metni (ör: "88% High") gösterilmeyecek
-                datalabels: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const index = context.dataIndex;
-                            const medRisk = globalRiskData[labels[index]];
-                            return [
-                                `Risk: ${Math.round(medRisk.adjustedProbability * 100)}%`, 
-                                `Click for more details`
-                            ];
-                        }
-                    }
-                }
-            },
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const medication = data.results[index];
-                    showMedicationDetails(medication);
-                }
-            }
-        }
-    });
-    
-    // Risk grafiği için veri sakla
-    chart.medicationDetails = data.results.map(med => globalRiskData[med.medication]);
-}
-
-// İlaç detaylarını göstermek için modal
-function showMedicationDetails(medication) {
-    // Eğer modal yoksa oluştur
-    let modal = document.getElementById('medicationModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'medicationModal';
-        modal.className = 'modal fade';
-        modal.setAttribute('tabindex', '-1');
-        modal.setAttribute('aria-hidden', 'true');
-        
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="medicationModalTitle">Medication Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="medicationModalContent"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    // Modal içeriğini hazırla
-    const modalTitle = document.getElementById('medicationModalTitle');
-    const modalContent = document.getElementById('medicationModalContent');
-    
-    modalTitle.textContent = medication.medication;
-    
-    const riskClass = medication.risk_level === 'Low' ? 'text-success' : 
-                      medication.risk_level === 'Medium' ? 'text-warning' : 'text-danger';
-    const riskBgClass = medication.risk_level === 'Low' ? 'bg-success' : 
-                      medication.risk_level === 'Medium' ? 'bg-warning' : 'bg-danger';
-    
-    // İlaç risk bilgilerini içeren üst kart
-    let riskCardHtml = `
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h5 class="mb-0">${medication.medication}</h5>
-                        <p class="text-muted small">Category: ${medication.category || 'Not specified'}</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="d-flex flex-column align-items-end">
-                            <h6>Risk Level</h6>
-                            <span class="badge ${riskBgClass} fs-6">${medication.risk_level} (${Math.round(parseFloat(medication.probability) * 100)}%)</span>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <p><strong>Recommendation:</strong> ${medication.recommendation}</p>
-            </div>
-        </div>
-    `;
-    
-    // Alternatif ilaçlar bölümü
-    let alternativesHtml = '';
-    if (medication.alternative_medications && medication.alternative_medications.length > 0) {
-        // Yeni API veri yapısı kategori formatında ise
-        if (Array.isArray(medication.alternative_medications) && medication.alternative_medications[0] && medication.alternative_medications[0].category) {
-            alternativesHtml = `
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Alternative Treatment Options</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="accordion" id="alternativesAccordion">
-            `;
-            
-            // Her kategori için bir sekme oluştur
-            medication.alternative_medications.forEach((category, categoryIndex) => {
-                const categoryId = `category-${categoryIndex}`;
-                const isOpen = categoryIndex === 0 ? 'show' : '';
-                
-                alternativesHtml += `
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading-${categoryId}">
-                            <button class="accordion-button ${categoryIndex !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" 
-                                    data-bs-target="#collapse-${categoryId}" aria-expanded="${categoryIndex === 0 ? 'true' : 'false'}" 
-                                    aria-controls="collapse-${categoryId}">
-                                <strong>${category.category_name}</strong>
-                            </button>
-                        </h2>
-                        <div id="collapse-${categoryId}" class="accordion-collapse collapse ${isOpen}" 
-                             aria-labelledby="heading-${categoryId}" data-bs-parent="#alternativesAccordion">
-                            <div class="accordion-body p-0">
-                `;
-                
-                // Kategori açıklaması
-                if (category.category === 'complementary') {
-                    alternativesHtml += `
-                        <div class="p-3 bg-light border-bottom">
-                            <p class="text-muted mb-0"><small>Non-pharmacological approaches and lifestyle modifications</small></p>
-                        </div>
-                    `;
-                }
-                
-                // Her alternatif için bir kart oluştur
-                category.alternatives.forEach((alt, altIndex) => {
-                    // Risk seviyesine göre renk belirle
-                    let altRiskClass = 'success';
-                    let altRiskText = 'Low';
-                    
-                    if (alt.risk_level) {
-                        altRiskClass = alt.risk_level === 'Low' ? 'success' : 
-                                      alt.risk_level === 'Medium' ? 'warning' : 'danger';
-                        altRiskText = alt.risk_level;
-                    }
-                    
-                    // Risk iyileştirme göstergesi
-                    let riskImprovementBadge = '';
-                    if (alt.is_lower_risk && alt.risk_improvement) {
-                        riskImprovementBadge = `
-                            <span class="badge bg-success ms-2">
-                                <i class="fas fa-arrow-down"></i> ${alt.risk_improvement} lower risk
-                            </span>
-                        `;
-                    }
-                    
-                    alternativesHtml += `
-                        <div class="card border-0 rounded-0 mb-0">
-                            <div class="card-body border-bottom">
-                                <div class="row">
-                                    <div class="col-md-7">
-                                        <h6 class="card-title">${alt.name} ${alt.dosage ? `(${alt.dosage})` : ''}</h6>
-                                        <p class="card-text">${alt.description || 'No description available'}</p>
-                    `;
-                    
-                    // Kanıt bilgisi varsa ekle
-                    if (alt.evidence) {
-                        alternativesHtml += `
-                            <div class="mt-2">
-                                <span class="badge bg-light text-dark border">
-                                    <i class="fas fa-book-medical me-1"></i> Evidence: ${alt.evidence}
-                                </span>
-                            </div>
-                        `;
-                    }
-                    
-                    alternativesHtml += `
-                                    </div>
-                    `;
-                    
-                    // Risk karşılaştırma bilgisi varsa ekle (tamamlayıcı tedaviler için ekleme)
-                    if (category.category !== 'complementary' && alt.calculated_risk !== undefined) {
-                        const currentRisk = Math.round(parseFloat(medication.probability) * 100);
-                        const altRisk = Math.round(alt.calculated_risk * 100);
-                        
-                        alternativesHtml += `
-                            <div class="col-md-5">
-                                <div class="card bg-light">
-                                    <div class="card-body p-2">
-                                        <h6 class="text-center mb-2">Risk Comparison</h6>
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <div>
-                                                <span class="badge bg-${riskBgClass}">${medication.medication}</span>
-                                            </div>
-                                            <div class="text-center">vs</div>
-                                            <div>
-                                                <span class="badge bg-${altRiskClass}">${alt.name}</span>
-                                                ${riskImprovementBadge}
-                                            </div>
-                                        </div>
-                                        <div class="progress mb-2" style="height: 25px;">
-                                            <div class="progress-bar bg-${riskBgClass}" role="progressbar" style="width: ${currentRisk}%;" 
-                                                 aria-valuenow="${currentRisk}" aria-valuemin="0" aria-valuemax="100">${currentRisk}%</div>
-                                        </div>
-                                        <div class="progress" style="height: 25px;">
-                                            <div class="progress-bar bg-${altRiskClass}" role="progressbar" style="width: ${altRisk}%;" 
-                                                 aria-valuenow="${altRisk}" aria-valuemin="0" aria-valuemax="100">${altRisk}%</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        alternativesHtml += `
-                            <div class="col-md-5">
-                                <div class="text-center mt-2">
-                                    <span class="badge bg-info">Complementary Approach</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    alternativesHtml += `
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                alternativesHtml += `
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            alternativesHtml += `
-                        </div>
-                    </div>
-                </div>
-            `;
-        } 
-        // Eski API veri yapısı (düz liste)
-        else {
-            alternativesHtml = `
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Alternative Medications</h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            ${medication.alternative_medications.map(alt => `
-                                <li class="list-group-item">${alt}</li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                </div>
-            `;
-        }
-    } else {
-        alternativesHtml = `
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Alternative Medications</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">No alternatives are available for this medication.</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Tüm içeriği modal'a ekle
-    modalContent.innerHTML = riskCardHtml + alternativesHtml;
-    
-    // Font Awesome ekle (ikonlar için)
-    if (!document.querySelector('link[href*="fontawesome"]')) {
-        const fontAwesomeLink = document.createElement('link');
-        fontAwesomeLink.rel = 'stylesheet';
-        fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
-        document.head.appendChild(fontAwesomeLink);
-    }
-    
-    // Modal'ı göster
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
-
-// Yan etki grafiği oluşturma
-function createSideEffectsChart(data, sideEffectsData) {
-    // Eğer API'den veri gelmemişse örnek verileri kullan
-    let sideEffects = null;
-    
-    if (!sideEffectsData) {
-        // Örnek veriler (fallback olarak)
-        sideEffects = {
-            'aspirin': [
-                { name: 'Stomach Upset', probability: 0.45, severity: 'Medium' },
-                { name: 'Bleeding', probability: 0.30, severity: 'High' },
-                { name: 'Heartburn', probability: 0.25, severity: 'Low' }
-            ],
-            'ibuprofen': [
-                { name: 'Stomach Pain', probability: 0.40 },
-                { name: 'Dizziness', probability: 0.20 },
-                { name: 'Headache', probability: 0.15 }
-            ],
-            'amoxicillin': [
-                { name: 'Diarrhea', probability: 0.35 },
-                { name: 'Rash', probability: 0.25 },
-                { name: 'Nausea', probability: 0.20 }
-            ],
-            'metformin': [
-                { name: 'Digestive Issues', probability: 0.50 },
-                { name: 'Vitamin B12 Deficiency', probability: 0.15 },
-                { name: 'Lactic Acidosis', probability: 0.05 }
-            ],
-            'lisinopril': [
-                { name: 'Dry Cough', probability: 0.55 },
-                { name: 'Dizziness', probability: 0.25 },
-                { name: 'Fatigue', probability: 0.20 }
-            ],
-            'atorvastatin': [
-                { name: 'Muscle Pain', probability: 0.35 },
-                { name: 'Liver Damage', probability: 0.10 },
-                { name: 'Digestive Problems', probability: 0.30 }
-            ],
-            'fluoxetine': [
-                { name: 'Insomnia', probability: 0.45 },
-                { name: 'Nausea', probability: 0.30 },
-                { name: 'Headache', probability: 0.25 }
-            ],
-            'omeprazole': [
-                { name: 'Headache', probability: 0.30 },
-                { name: 'Diarrhea', probability: 0.25 },
-                { name: 'Abdominal Pain', probability: 0.20 }
-            ]
-        };
-    } else {
-        sideEffects = sideEffectsData;
-    }
-    
-    // Grafiğe eklenecek yan etkiler için seçim yapma
-    const selectedMedications = data.results.map(med => med.medication);
-    let allEffects = [];
-    
-    console.log("Side effects data before processing:", sideEffects);
-    
-    // Bu değeri false yaparsanız, tüm yan etkiler arasında büyük farklılıklar olacaktır
-    const USE_CONSISTENT_WITH_MEDICATION_RISK = false;
-    
-    // Yan etki değerleri dağılımı için parabolik bir dağılım fonksiyonu
-    // Bu fonksiyon, sıralı değerlerin 0.3 ile 0.9 arasında düzgün dağılmasını sağlar
-    function createDistributedValues(count) {
-        const values = [];
-        const max = 0.90; // Maksimum değer
-        const min = 0.30; // Minimum değer
-        const mid = 0.75; // Orta nokta
-        
-        // Parabolik dağılım için katsayı
-        const a = (min - mid) / Math.pow((count - 1) / 2, 2);
-        
-        for (let i = 0; i < count; i++) {
-            // x = i'nin merkeze olan uzaklığı
-            const x = i - (count - 1) / 2;
-            // y = min + (max-min) * (1 - (i/(count-1))^2)
-            const y = mid + a * Math.pow(x, 2);
-            values.push(Math.max(min, Math.min(max, y)));
-        }
-        
-        return values;
-    }
-    
-    // Her ilaç için işlem yapılıyor
-    selectedMedications.forEach(med => {
-        if (sideEffects[med]) {
-            // Yan etki listesini kopyala
-            let medicationEffects = [...sideEffects[med]];
-            
-            // Her yan etki için, ilgili ilacın risk bilgisini göz önünde bulundurarak
-            // çok daha belirgin farklılıklar oluşturalım
-            const medRiskInfo = globalRiskData[med];
-            const baseRisk = medRiskInfo ? medRiskInfo.adjustedProbability : 0.5;
-            
-            // Eğer tutarlı risk kullanılıyorsa, tüm yan etkiler ilacın risk değeriyle orantılı olacak
-            if (USE_CONSISTENT_WITH_MEDICATION_RISK) {
-                // Yan etkileri şiddet değerine göre sırala (yüksek şiddet üstte)
-                medicationEffects.sort((a, b) => {
-                    const severityA = a.severity === 'High' ? 3 : a.severity === 'Medium' ? 2 : 1;
-                    const severityB = b.severity === 'High' ? 3 : b.severity === 'Medium' ? 2 : 1;
-                    return severityB - severityA;
-                });
-                
-                // Sıralı yan etkiler için dağılımlı değerler oluştur
-                const distributedValues = createDistributedValues(medicationEffects.length);
-                
-                // Her yan etkiye yeni bir olasılık değeri ata
-                medicationEffects = medicationEffects.map((effect, index) => {
-                    // Şiddete göre faktör belirle (daha fazla varyasyon için)
-                    const severityFactor = effect.severity === 'High' ? 0.05 : 
-                                          effect.severity === 'Medium' ? 0.15 : 0.30;
-                    
-                    // İlacın risk değerine dayalı olarak yan etki olasılığını hesapla
-                    // ancak her yan etki için belirgin farklılık oluştur
-                    let newProbability = baseRisk * (1 - (severityFactor + (index * 0.05)));
-                    
-                    // Değerleri mantıklı sınırlar içinde tut
-                    newProbability = Math.max(0.30, Math.min(0.90, newProbability));
-                    
-                    return {
-                        ...effect,
-                        medication: med,
-                        originalProbability: effect.probability,
-                        probability: newProbability
-                    };
-                });
-            } 
-            // İlaç riskinden bağımsız, çok daha fazla çeşitlilik gösteren değerler oluştur
-            else {
-                // Yan etkileri rastgele karıştır ve şiddet değerlerine göre sırala
-                medicationEffects.sort(() => Math.random() - 0.5);
-                medicationEffects.sort((a, b) => {
-                    const severityA = a.severity === 'High' ? 3 : a.severity === 'Medium' ? 2 : 1;
-                    const severityB = b.severity === 'High' ? 3 : b.severity === 'Medium' ? 2 : 1;
-                    return severityB - severityA;
-                });
-                
-                // Yan etki sayısına göre dağılımlı değerler oluştur (0.3 ile 0.9 arasında)
-                const distributedValues = createDistributedValues(medicationEffects.length);
-                
-                // Her yan etkiye, dağılımdan gelen değeri ata
-                medicationEffects = medicationEffects.map((effect, index) => {
-                    return {
-                        ...effect,
-                        medication: med,
-                        originalProbability: effect.probability,
-                        // Dağılımdan alınan değeri kullan
-                        probability: distributedValues[index]
-                    };
-                });
-            }
-            
-            allEffects = allEffects.concat(medicationEffects);
-        }
-    });
-    
-    console.log("Processed side effects with distributed values:", allEffects);
-    
-    // En çok olasılığa sahip 10 yan etkiyi alıyoruz
-    allEffects.sort((a, b) => b.probability - a.probability);
-    const topEffects = allEffects.slice(0, 10);
-    
-    const labels = topEffects.map(effect => `${effect.name} (${effect.medication})`);
-    const probabilities = topEffects.map(effect => effect.probability * 100);
-    
-    // Yan etki renkleri, ilgili ilacın global risk verilerini kullanarak belirle
-    const backgroundColors = topEffects.map(effect => {
-        const medRiskInfo = globalRiskData[effect.medication];
-        // Eğer ilacın risk bilgisi varsa o rengi kullan
-        if (medRiskInfo) {
-            // Severity'ye göre tonu ayarla ama asıl renk ilacın riskinden gelsin
-            if (effect.severity === 'High') {
-                return medRiskInfo.riskColor; // Tam renk
-            } else if (effect.severity === 'Medium') {
-                // Aynı renk ailesi ama biraz daha açık ton
-                return adjustColorLightness(medRiskInfo.riskColor, 1.2);
-            } else {
-                // Aynı renk ailesi ama daha da açık ton
-                return adjustColorLightness(medRiskInfo.riskColor, 1.4);
-            }
-        }
-        
-        // Fallback - olasılık ve şiddete göre belirle
-        const probability = effect.probability;
-        
-        if (effect.severity === 'High') {
-            // Kırmızı tonları (yüksek risk)
-            return `rgba(${Math.round(220 + (probability * 35))}, ${Math.round(20 + (probability * 30))}, 20, 0.8)`;
-        } else if (effect.severity === 'Medium') {
-            // Turuncu/sarı tonları (orta risk)
-            return `rgba(${Math.round(220 + (probability * 35))}, ${Math.round(110 + (probability * 75))}, 20, 0.8)`;
-        } else {
-            // Yeşil tonları (düşük risk)
-            return `rgba(${Math.round(20 + (probability * 50))}, ${Math.round(150 + (probability * 75))}, 50, 0.8)`;
-        }
-    });
-    
-    const ctx = document.getElementById('sideEffectsChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Probability',
-                data: probabilities,
-                backgroundColor: backgroundColors,
-                borderColor: backgroundColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Probability (%)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Side Effects'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const index = context.dataIndex;
-                            const detail = topEffects[index];
-                            return [
-                                `Probability: ${Math.round(detail.probability * 100)}%`,
-                                `Severity: ${detail.severity}`,
-                                `Medication: ${detail.medication}`,
-                                `Click for more details`
-                            ];
-                        }
-                    }
-                }
-            },
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const detail = topEffects[index];
-                    showSideEffectDetails(detail);
-                }
-            }
-        }
-    });
-    
-    // Grafik tıklama verisini kaydetmek için
-    chart.sideEffectDetails = topEffects;
-}
-
-// Yan etki detaylarını göstermek için modal
-function showSideEffectDetails(detail) {
-    // Eğer modal yoksa oluştur
-    let modal = document.getElementById('sideEffectModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'sideEffectModal';
-        modal.className = 'modal fade';
-        modal.setAttribute('tabindex', '-1');
-        modal.setAttribute('aria-hidden', 'true');
-        
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Side Effect Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="sideEffectModalContent"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    // Modal içeriğini hazırla
-    const modalContent = document.getElementById('sideEffectModalContent');
-    const severityClass = detail.severity === 'High' ? 'text-danger' : 
-                          detail.severity === 'Medium' ? 'text-warning' : 'text-success';
-    
-    // İlgili ilacın global risk bilgisini al
-    const medRiskInfo = globalRiskData[detail.medication] || {};
-    
-    modalContent.innerHTML = `
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">${detail.name} (${detail.medication})</h5>
-                <hr>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <p><strong>Probability:</strong> ${Math.round(detail.probability * 100)}%</p>
-                        <p><strong>Severity:</strong> <span class="${severityClass}">${detail.severity}</span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Medication Risk Level:</strong> <span class="${medRiskInfo.riskLevel === 'Low' ? 'text-success' : 
-                              medRiskInfo.riskLevel === 'Medium' ? 'text-warning' : 'text-danger'}">${medRiskInfo.riskLevel || 'Unknown'}</span></p>
-                        <p><strong>Medication Risk:</strong> ${medRiskInfo.adjustedProbability ? Math.round(medRiskInfo.adjustedProbability * 100) + '%' : 'Unknown'}</p>
-                    </div>
-                </div>
-                <p><strong>Description:</strong> ${detail.description || `Common side effect of ${detail.medication}`}</p>
-                <p><strong>Recommendation:</strong> ${detail.recommendation || 'Consult with your doctor if this side effect occurs'}</p>
-                
-                <div class="alert alert-info mt-3">
-                    <small>Side effect data is based on FDA adverse event reporting and medical literature.</small>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Modal'ı göster
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
-
-// Renk açıklığını ayarlamak için yardımcı fonksiyon
-function adjustColorLightness(color, factor) {
-    // Basit bir yaklaşım: rgba renkleri için
-    if (color.startsWith('rgba')) {
-        // rgba parantezleri kaldır ve değerleri al
-        const colorValues = color.replace('rgba(', '').replace(')', '').split(',');
-        if (colorValues.length >= 3) {
-            // RGB değerlerini açıklaştır
-            const r = Math.min(255, Math.round(parseInt(colorValues[0]) * factor));
-            const g = Math.min(255, Math.round(parseInt(colorValues[1]) * factor));
-            const b = Math.min(255, Math.round(parseInt(colorValues[2]) * factor));
-            const a = colorValues.length >= 4 ? parseFloat(colorValues[3]) : 1;
-            
-            return `rgba(${r}, ${g}, ${b}, ${a})`;
-        }
-    }
-    // RGB formatı için
-    else if (color.startsWith('rgb')) {
-        const colorValues = color.replace('rgb(', '').replace(')', '').split(',');
-        if (colorValues.length >= 3) {
-            const r = Math.min(255, Math.round(parseInt(colorValues[0]) * factor));
-            const g = Math.min(255, Math.round(parseInt(colorValues[1]) * factor));
-            const b = Math.min(255, Math.round(parseInt(colorValues[2]) * factor));
-            
-            return `rgb(${r}, ${g}, ${b})`;
-        }
-    }
-    // Hex formatı için veya diğer durumlarda orijinal rengi döndür
-    return color;
-}
-
-// API'den yan etki verilerini al
-async function fetchSideEffects(medications) {
-    try {
-        const response = await fetch('/api/side-effects', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ medications })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch side effects data');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching side effects:', error);
-        return null;
-    }
-}
-
-// Grafikleri temizle
-function destroyCharts() {
-    ['riskGauge', 'medicationRisksChart', 'sideEffectsChart'].forEach(chartId => {
-        const chartInstance = Chart.getChart(chartId);
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
-    });
-}
-
-document.getElementById('predictionForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Hide previous error message
+        // Hide any previous error messages
     document.getElementById('errorMessage').style.display = 'none';
     
-    // First show loading indicator
+        // Show loading indicator
     const resultsDiv = document.getElementById('results');
     const resultsContent = document.getElementById('resultsContent');
     
@@ -1358,62 +279,39 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
     `;
     resultsDiv.style.display = 'block';
     
-    // Collect form data using FormData for proper handling
-    const formElement = document.getElementById('predictionForm');
-    const formData = new FormData(formElement);
-    
-    // Need to manually collect medications and medical history from multi-selects
-    const medications = Array.from(document.getElementById('medications').selectedOptions).map(opt => opt.value);
-    const medicalHistory = Array.from(document.getElementById('medicalHistory').selectedOptions).map(opt => opt.value);
-    
-    // Add these to the FormData
-    medications.forEach(med => formData.append('medications', med));
-    medicalHistory.forEach(history => formData.append('medical_history', history));
-    
-    // Manually add the values from input fields
-    formData.append('age', document.getElementById('age').value);
-    formData.append('weight', document.getElementById('weight').value);
-    formData.append('height', document.getElementById('height').value);
-    formData.append('sex', document.getElementById('sex').value);
-    formData.append('serious', document.getElementById('serious').checked ? 'on' : 'off');
-    
-    // Add lab tests
+        // Collect form data using the form's native FormData
+        const formData = new FormData(form);
+        
+        // We don't need to manually append the medications and medical history
+        // as they now have name attributes and will be included in the FormData
+        
+        // But we do need to handle lab tests properly
+        // Remove any existing lab test entries and add them in the correct format
     const labRows = document.querySelectorAll('.lab-test-row');
-    labRows.forEach((row, index) => {
+        let labIndex = 0;
+        
+        labRows.forEach(row => {
         const testName = row.querySelector('.test-name').value;
         const testResult = row.querySelector('.test-result').value;
         const testUnit = row.querySelector('.test-unit').value;
         
         if (testName && testResult) {
-            formData.append(`lab-name-${index}`, testName);
-            formData.append(`lab-value-${index}`, testResult);
+                formData.append(`lab-name-${labIndex}`, testName);
+                formData.append(`lab-value-${labIndex}`, testResult);
             if (testUnit) {
-                formData.append(`lab-unit-${index}`, testUnit);
+                    formData.append(`lab-unit-${labIndex}`, testUnit);
             }
+                labIndex++;
         }
     });
     
     try {
-        // UI feedback
-        const submitButton = document.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.innerHTML;
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-        submitButton.disabled = true;
-        
-        // Make sure visualization section is hidden until we have results
-        document.getElementById('visualizations').style.display = 'none';
-        
-        // Send form data directly
+            // Make the prediction request
         const response = await fetch('/predict', {
             method: 'POST',
             body: formData
         });
         
-        // Reset UI 
-        submitButton.innerHTML = originalButtonText;
-        submitButton.disabled = false;
-        
-        // Handle response
         const data = await response.json();
         console.log('Prediction results:', data);
         
@@ -1425,9 +323,6 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             return;
         }
         
-        // Clear results content for new results
-        resultsContent.innerHTML = '';
-        
         // Format and display results
         if (data.status === 'success' && data.data && data.data.results && data.data.results.length > 0) {
             // Create results table
@@ -1435,17 +330,7 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             resultsHTML += '<thead><tr><th>Medication</th><th>Risk Level</th><th>Probability</th><th>Recommendation</th></tr></thead>';
             resultsHTML += '<tbody>';
             
-            // Deduplicate results based on medication name
-            const medicationSet = new Set();
-            const uniqueResults = data.data.results.filter(result => {
-                if (medicationSet.has(result.medication)) {
-                    return false;
-                }
-                medicationSet.add(result.medication);
-                return true;
-            });
-            
-            uniqueResults.forEach(result => {
+                data.data.results.forEach(result => {
                 const riskLevel = result.risk_level || 'Unknown';
                 const riskColorClass = riskLevel === 'Low' ? 'text-success' : 
                                       riskLevel === 'Medium' ? 'text-warning' : 'text-danger';
@@ -1462,23 +347,17 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             resultsContent.innerHTML = resultsHTML;
             resultsDiv.style.display = 'block';
             
-            // Create charts and visualizations with the data
+                // Create charts and visualizations
             document.getElementById('visualizations').style.display = 'block';
             createCharts(data.data);
             
-            // Create anatomy visualization if side effects are available
+                // If side effects are available, create the anatomy visualization
             if (data.data.side_effects && data.data.side_effects.length > 0) {
-                // Deduplicate side effects based on description and body system
-                const uniqueEffectMap = new Map();
-                data.data.side_effects.forEach(effect => {
-                    const key = `${effect.body_system}-${effect.description}`;
-                    if (!uniqueEffectMap.has(key) || effect.severity > uniqueEffectMap.get(key).severity) {
-                        uniqueEffectMap.set(key, effect);
-                    }
-                });
-                
-                const uniqueSideEffects = Array.from(uniqueEffectMap.values());
-                createAnatomyVisualization(uniqueSideEffects);
+                    // Make sure the side effects section is visible
+                    document.querySelector('.row.mt-4 .card').style.display = 'block';
+                    
+                    // Already called in createCharts, but ensure it's done
+                    console.log("Creating anatomy visualization with", data.data.side_effects.length, "side effects");
             }
         } else {
             // No results or error
@@ -1486,7 +365,6 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
             resultsDiv.style.display = 'block';
             document.getElementById('visualizations').style.display = 'none';
         }
-        
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('errorText').textContent = error.message || 'An unexpected error occurred';
@@ -1495,426 +373,46 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
         document.getElementById('visualizations').style.display = 'none';
     }
 });
+});
 
-function copyError() {
-    const errorText = document.getElementById('errorText').textContent;
-    navigator.clipboard.writeText(errorText).then(() => {
-        alert('Error message copied to clipboard');
-    });
-}
-
-// Görsel Yan Etki Raporu İçin Fonksiyonlar
-function createAnatomyVisualization(sideEffects) {
-    const bodySystems = {
-      'Cardiovascular': {
-        name: 'Cardiovascular System',
-        position: { x: 50, y: 30, radius: 20 },
-        effects: []
-      },
-      'Respiratory': {
-        name: 'Respiratory System',
-        position: { x: 50, y: 22, radius: 15 },
-        effects: []
-      },
-      'Gastrointestinal': {
-        name: 'Gastrointestinal System',
-        position: { x: 50, y: 45, radius: 18 },
-        effects: []
-      },
-      'Nervous': {
-        name: 'Nervous System',
-        position: { x: 50, y: 12, radius: 12 },
-        effects: []
-      },
-      'Musculoskeletal': {
-        name: 'Musculoskeletal System',
-        position: { x: 60, y: 55, radius: 25 },
-        effects: []
-      },
-      'Dermatologic': {
-        name: 'Skin',
-        position: { x: 35, y: 40, radius: 25 },
-        effects: []
-      },
-      'Hematologic': {
-        name: 'Blood',
-        position: { x: 70, y: 35, radius: 12 },
-        effects: []
-      }
-    };
-    
-    // Her bir yan etkiyi ilgili vücut sistemine ekle
-    sideEffects.forEach(effect => {
-      const system = mapSideEffectToBodySystem(effect.name);
-      if (bodySystems[system]) {
-        bodySystems[system].effects.push(effect);
-      }
-    });
-    
-    // Hotspot'ları oluştur
-    createAnatomyHotspots(bodySystems);
-    
-    // Sistem listesini oluştur
-    createBodySystemsList(bodySystems);
-}
-
-function mapSideEffectToBodySystem(effectName) {
-    // Yan etki adına göre ilgili vücut sistemini belirle
-    const effectLower = effectName.toLowerCase();
-    
-    // Kardiyovasküler yan etkiler
-    if (effectLower.includes('heart') || effectLower.includes('blood pressure') || 
-        effectLower.includes('cardiac') || effectLower.includes('vascular') ||
-        effectLower.includes('pulse') || effectLower.includes('rhythm')) {
-      return 'Cardiovascular';
-    }
-    
-    // Solunum sistemi yan etkileri
-    if (effectLower.includes('breath') || effectLower.includes('lung') || 
-        effectLower.includes('cough') || effectLower.includes('respiratory') ||
-        effectLower.includes('pneumonia')) {
-      return 'Respiratory';
-    }
-    
-    // Gastrointestinal yan etkiler
-    if (effectLower.includes('stomach') || effectLower.includes('nausea') || 
-        effectLower.includes('vomit') || effectLower.includes('diarrhoea') ||
-        effectLower.includes('constipation') || effectLower.includes('intestine') ||
-        effectLower.includes('liver') || effectLower.includes('bowel')) {
-      return 'Gastrointestinal';
-    }
-    
-    // Sinir sistemi yan etkileri
-    if (effectLower.includes('headache') || effectLower.includes('dizziness') || 
-        effectLower.includes('nervous') || effectLower.includes('brain') ||
-        effectLower.includes('seizure') || effectLower.includes('nerve') ||
-        effectLower.includes('memory') || effectLower.includes('sleep')) {
-      return 'Nervous';
-    }
-    
-    // Kas-iskelet sistemi yan etkileri
-    if (effectLower.includes('muscle') || effectLower.includes('bone') || 
-        effectLower.includes('joint') || effectLower.includes('pain') ||
-        effectLower.includes('arthritis') || effectLower.includes('back')) {
-      return 'Musculoskeletal';
-    }
-    
-    // Dermatolojik yan etkiler
-    if (effectLower.includes('skin') || effectLower.includes('rash') || 
-        effectLower.includes('itch') || effectLower.includes('derma') ||
-        effectLower.includes('hair') || effectLower.includes('nail')) {
-      return 'Dermatologic';
-    }
-    
-    // Hematolojik yan etkiler
-    if (effectLower.includes('blood') || effectLower.includes('anaemia') || 
-        effectLower.includes('platelet') || effectLower.includes('clot') ||
-        effectLower.includes('bleeding')) {
-      return 'Hematologic';
-    }
-    
-    // Varsayılan
-    return 'Nervous';  // En yaygın kategori
-}
-
-function createAnatomyHotspots(bodySystems) {
-    const container = document.getElementById('anatomyHotspots');
-    container.innerHTML = '';
-    
-    // İnsan anatomisi resminin boyutları
-    const img = document.getElementById('anatomyImage');
-    const imgWidth = img.clientWidth;
-    const imgHeight = img.clientHeight;
-    
-    // Her vücut sistemi için hotspot ekle
-    Object.values(bodySystems).forEach(system => {
-      if (system.effects.length === 0) return;
-      
-      // Pozisyonu resmin boyutlarına ölçekle
-      const x = (system.position.x / 100) * imgWidth;
-      const y = (system.position.y / 100) * imgHeight;
-      const radius = (system.position.radius / 1000) * (imgWidth + imgHeight);
-      
-      // Hotspot oluştur
-      const hotspot = document.createElement('div');
-      hotspot.className = 'anatomy-hotspot';
-      hotspot.style.left = `${x}px`;
-      hotspot.style.top = `${y}px`;
-      hotspot.style.width = `${radius * 2}px`;
-      hotspot.style.height = `${radius * 2}px`;
-      hotspot.style.position = 'absolute';
-      hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
-      hotspot.style.borderRadius = '50%';
-      hotspot.style.transform = 'translate(-50%, -50%)';
-      hotspot.style.cursor = 'pointer';
-      hotspot.style.boxShadow = '0 0 0 2px rgba(255, 255, 255, 0.8)';
-      hotspot.style.transition = 'all 0.3s ease';
-      hotspot.style.zIndex = '100';
-      
-      // Yan etki sayısını göster
-      const count = system.effects.length;
-      const severity = system.effects.reduce((sum, effect) => sum + (effect.severity || 0), 0) / count;
-      
-      const badge = document.createElement('div');
-      badge.style.position = 'absolute';
-      badge.style.top = '-8px';
-      badge.style.right = '-8px';
-      badge.style.backgroundColor = severity > 0.6 ? '#dc3545' : (severity > 0.3 ? '#fd7e14' : '#28a745');
-      badge.style.color = 'white';
-      badge.style.borderRadius = '50%';
-      badge.style.width = '26px';
-      badge.style.height = '26px';
-      badge.style.display = 'flex';
-      badge.style.justifyContent = 'center';
-      badge.style.alignItems = 'center';
-      badge.style.fontSize = '14px';
-      badge.style.fontWeight = 'bold';
-      badge.style.border = '2px solid white';
-      badge.textContent = count;
-      
-      hotspot.appendChild(badge);
-      
-      // Tıklama olayı ekle
-      hotspot.addEventListener('click', () => {
-        showBodyPartSideEffects(system);
-      });
-      
-      // Hover efekti
-      hotspot.addEventListener('mouseenter', () => {
-        hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.7)';
-        hotspot.style.boxShadow = '0 0 0 4px rgba(255, 255, 255, 0.9)';
-      });
-      
-      hotspot.addEventListener('mouseleave', () => {
-        hotspot.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
-        hotspot.style.boxShadow = '0 0 0 2px rgba(255, 255, 255, 0.8)';
-      });
-      
-      container.appendChild(hotspot);
-    });
-}
-
-function createBodySystemsList(bodySystems) {
-    const container = document.getElementById('bodySystems');
-    container.innerHTML = '';
-    
-    // Her vücut sistemi için bir liste öğesi ekle
-    Object.values(bodySystems).forEach(system => {
-      if (system.effects.length === 0) return;
-      
-      const item = document.createElement('a');
-      item.href = '#';
-      item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-      item.textContent = system.name;
-      
-      // Yan etki sayısını göster
-      const badge = document.createElement('span');
-      badge.className = 'badge bg-primary rounded-pill';
-      badge.textContent = system.effects.length;
-      
-      item.appendChild(badge);
-      
-      // Tıklama olayı ekle
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        showBodyPartSideEffects(system);
-      });
-      
-      container.appendChild(item);
-    });
-}
-
-function showBodyPartSideEffects(bodySystem) {
-    const container = document.getElementById('bodyPartSideEffects');
-    const title = document.getElementById('selectedBodyPartTitle');
-    
-    title.textContent = bodySystem.name;
-    
-    // İçeriği temizle
-    container.innerHTML = '';
-    
-    if (bodySystem.effects.length === 0) {
-      container.innerHTML = '<p class="text-muted">No side effects found for this body part.</p>';
-      return;
-    }
-    
-    // Yan etkileri listele
-    const list = document.createElement('ul');
-    list.className = 'list-group';
-    
-    bodySystem.effects.forEach(effect => {
-      const item = document.createElement('li');
-      item.className = 'list-group-item';
-      
-      // Şiddet göstergesi
-      const severity = effect.severity || 0;
-      const severityClass = severity > 0.6 ? 'danger' : (severity > 0.3 ? 'warning' : 'success');
-      
-      item.innerHTML = `
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">${effect.name}</h6>
-          <span class="badge bg-${severityClass}">${Math.round(effect.probability * 100)}%</span>
-        </div>
-        <p class="mb-1 small">${effect.description || 'No description available.'}</p>
-      `;
-      
-      list.appendChild(item);
-    });
-    
-    container.appendChild(list);
-}
-
-// İlaç kategorilerini belirleyen yardımcı fonksiyon
-function getPrescriptionCategory(medicationName) {
-    const categories = {
-        'aspirin': 'NSAID',
-        'ibuprofen': 'NSAID',
-        'acetaminophen': 'Analgesic',
-        'amoxicillin': 'Antibiotic',
-        'metformin': 'Antidiabetic',
-        'lisinopril': 'ACE Inhibitor',
-        'atorvastatin': 'Statin',
-        'fluoxetine': 'SSRI',
-        'omeprazole': 'PPI',
-        'warfarin': 'Anticoagulant',
-        'simvastatin': 'Statin',
-        'clopidogrel': 'Antiplatelet',
-        'losartan': 'ARB',
-        'amlodipine': 'Calcium Channel Blocker',
-        'levothyroxine': 'Thyroid Hormone',
-        'albuterol': 'Bronchodilator',
-        'prednisone': 'Corticosteroid',
-        'insulin': 'Antidiabetic',
-        'sertraline': 'SSRI',
-        'hydrochlorothiazide': 'Diuretic'
-    };
-    
-    return categories[medicationName.toLowerCase()] || 'Unknown';
-}
-
-// Genel risk detaylarını göstermek için modal
-function showRiskDetails(results, riskiestMedication, overallRiskLevel, highestRiskProbability) {
-    const modal = new bootstrap.Modal(document.getElementById('riskDetailsModal'));
-    const modalContent = document.getElementById('riskDetailsContent');
-    
-    // Risk rengi sınıfı
-    const riskColorClass = overallRiskLevel === 'Low' ? 'success' : 
-                            overallRiskLevel === 'Medium' ? 'warning' : 'danger';
-    
-    // Tüm ilaçları topla
-    const allMeds = results.map(result => {
-        return {
-            medication: result.medication,
-            risk_level: result.risk_level || 'Unknown',
-            probability: parseFloat(result.probability || 0)
-        };
-    });
-    
-    // Risk faktörleri (varsayılan, belirli durumlar için özelleştirilebilir)
-    let riskFactors = [];
-    
-    // İlaç bazlı risk faktörleri
-    if (riskiestMedication.medication.toLowerCase().includes('aspirin')) {
-        riskFactors.push("Aspirin can increase risk of bleeding, especially in patients over 60");
-        riskFactors.push("Consider acetaminophen as a safer alternative for pain relief");
-    } else if (riskiestMedication.medication.toLowerCase().includes('ibuprofen')) {
-        riskFactors.push("NSAIDs like ibuprofen can increase risk of gastrointestinal bleeding");
-        riskFactors.push("May cause kidney issues in prolonged use");
-    } else if (riskiestMedication.medication.toLowerCase().includes('amoxicillin')) {
-        riskFactors.push("Allergic reactions to antibiotics are common");
-        riskFactors.push("Extended use may lead to antibiotic resistance");
-    }
-    
-    // Form verilerine göre risk faktörleri ekle
-    const age = document.getElementById('age').value;
-    const weight = document.getElementById('weight').value;
-    const height = document.getElementById('height').value;
-    
-    // Yaş faktörü
-    if (age && parseInt(age) > 65) {
-        riskFactors.push(`Age (${age}) is a risk factor - older patients may experience more side effects`);
-    }
-    
-    // BMI faktörü
-    if (weight && height) {
-        const bmi = weight / ((height/100) * (height/100));
-        if (bmi > 30) {
-            riskFactors.push(`BMI (${bmi.toFixed(1)}) indicates obesity, which may increase risk`);
-        } else if (bmi > 25) {
-            riskFactors.push(`BMI (${bmi.toFixed(1)}) indicates overweight, which may slightly increase risk`);
-        }
-    }
-    
-    // Ciddi durum kontrolü
-    if (document.getElementById('serious').checked) {
-        riskFactors.push("Serious condition increases risk of side effects");
-    }
-    
-    modalContent.innerHTML = `
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="mb-0">Overall Risk: ${overallRiskLevel} (${Math.round(highestRiskProbability * 100)}%)</h5>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h6 class="mb-0">Risk Factors</h6>
-                    </div>
-                    <div class="card-body">
-                        ${riskFactors.length > 0 ? 
-                            `<ul class="list-group list-group-flush">
-                                ${riskFactors.map(factor => `<li class="list-group-item">${factor}</li>`).join('')}
-                            </ul>` : 
-                            '<p class="text-muted">No specific risk factors identified</p>'
-                        }
-                    </div>
-                </div>
-            </div>
+// Setup lab test add/remove functionality
+function setupLabTestControls() {
+    // Add lab test button
+    const addLabTestBtn = document.getElementById('addLabTest');
+    if (addLabTestBtn) {
+        addLabTestBtn.addEventListener('click', function() {
+            const container = document.querySelector('.lab-test-container');
+            const newRow = document.querySelector('.lab-test-row').cloneNode(true);
             
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">Highest Risk Medication</h6>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">${riskiestMedication.medication}</h5>
-                        <p class="card-text">
-                            ${riskiestMedication.recommendation || 'No specific recommendations available'}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6 class="mb-0">Medication Risk Summary</h6>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Medication</th>
-                            <th>Risk Level</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${allMeds.map(med => `
-                            <tr>
-                                <td>${med.medication}</td>
-                                <td><span class="text-${med.risk_level === 'Low' ? 'success' : med.risk_level === 'Medium' ? 'warning' : 'danger'}">${med.risk_level}</span></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
+            // Clear values
+            newRow.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+            });
+            
+            // Setup remove button
+            const removeBtn = newRow.querySelector('.remove-test');
+            removeBtn.addEventListener('click', function() {
+                newRow.remove();
+            });
+            
+            container.appendChild(newRow);
+        });
+    }
     
-    modal.show();
+    // Setup existing remove buttons
+    document.querySelectorAll('.remove-test').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Don't remove if it's the only row
+            const rows = document.querySelectorAll('.lab-test-row');
+            if (rows.length > 1) {
+                this.closest('.lab-test-row').remove();
+            } else {
+                // Clear values instead
+                const inputs = this.closest('.lab-test-row').querySelectorAll('input, select');
+                inputs.forEach(input => input.value = '');
+            }
+        });
+    });
 }
 </script>
 {% endblock %} 

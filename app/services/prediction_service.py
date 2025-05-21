@@ -927,11 +927,28 @@ class PredictionService:
                 if category != 'complementary':
                     alternatives_with_risk.sort(key=lambda x: x.get('calculated_risk', 1.0))
                 
+                # Formatlanmış alternatifleri ekle - sadece en önemli bilgileri içerecek şekilde basitleştirilmiş
+                simplified_alternatives = []
+                for alt in alternatives_with_risk:
+                    # Basitleştirilmiş alternatif bilgisi
+                    simplified_alt = {
+                        'name': alt.get('name', 'Unknown')
+                    }
+                    
+                    # İlgili bilgileri ekle
+                    if 'dosage' in alt:
+                        simplified_alt['dosage'] = alt['dosage']
+                    
+                    if 'description' in alt:
+                        simplified_alt['description'] = alt['description']
+                    
+                    simplified_alternatives.append(simplified_alt)
+                
                 # Formatlanmış ve kategorilenmiş alternatifleri ekle
                 formatted_category = {
                     'category': category,
                     'category_name': self._get_category_display_name(category),
-                    'alternatives': alternatives_with_risk
+                    'alternatives': simplified_alternatives
                 }
                 
                 formatted_alternatives.append(formatted_category)

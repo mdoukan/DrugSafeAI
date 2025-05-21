@@ -1,67 +1,431 @@
+/* Animasyonlar */
+@keyframes heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.12);
+    }
+    50% {
+        transform: scale(0.9);
+    }
+    75% {
+        transform: scale(1.05);
+    }
+}
+@keyframes moveBackground {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Genel görünüm */
 body {
-    background-color: #f8f9fa;
+    background: linear-gradient(270deg, #fff0f5, #fce7f3, #ffe4e1);
+    background-size: 600% 600%;
+    animation: moveBackground 30s ease infinite;
+    font-family: 'Comic Neue', cursive, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #4b2e2e;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.card {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.navbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-.btn-primary {
-    padding: 0.75rem 1.5rem;
-}
-
-.badge {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-}
-
-/* İnsan Anatomisi Görselleştirmesi Stilleri */
-.anatomy-hotspot {
-    position: absolute;
+.logo-heart {
+    position: relative;
+    width: 100px;
+    height: 90px;
+    margin: 0 auto;
+    animation: heartbeat 1.5s infinite;
     cursor: pointer;
+}
+
+/* Kalp şekli */
+.logo-heart::before,
+.logo-heart::after {
+    content: "";
+    position: absolute;
+    width: 50px;
+    height: 80px;
+    background: #ec4899;
+    border-radius: 50px 50px 0 0;
+    top: 0;
+}
+
+.logo-heart::before {
+    left: 50px;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+}
+
+.logo-heart::after {
+    left: 0;
+    transform: rotate(45deg);
+    transform-origin: 100% 100%;
+}
+
+/* Kalbin ortasındaki yazı */
+.logo-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+    z-index: 3;
+    user-select: none;
+    pointer-events: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #fce7f3;
+    box-shadow: 0 4px 12px rgba(248, 113, 169, 0.2);
+    padding: 1rem 2rem;
+    margin-bottom: 2rem;
+    border-radius: 0 0 1rem 1rem;
+}
+
+/* Kartlar */
+.card {
+    background-color: #fff0f5;
+    border-radius: 1.25rem;
+    box-shadow: 0 6px 18px rgba(255, 105, 180, 0.15);
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 12px 24px rgba(255, 105, 180, 0.2);
+}
+
+/* Form alanları */
+.form-control,
+.form-select {
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #f9a8d4;
+    background-color: #fffafd;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.form-control:focus,
+.form-select:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 0.25rem rgba(236, 72, 153, 0.25);
+}
+
+/* Düğmeler */
+.btn-primary,
+.btn-pink {
+    background: linear-gradient(to right, #f472b6, #ec4899);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 2rem;
+    padding: 0.75rem 1.5rem;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+.btn-primary:hover,
+.btn-pink:hover {
+    background: linear-gradient(to right, #ec4899, #f472b6);
+    transform: translateY(-2px);
+}
+
+/* Etiketler */
+.badge {
+    font-size: 0.95rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 1rem;
+    background-color: #f9a8d4;
+    color: #fff;
+}
+
+/* Ek stiller */
+.shadow-soft { box-shadow: 0 8px 24px rgba(248, 113, 169, 0.2) !important; }
+.rounded-4 { border-radius: 2rem !important; }
+.bg-pink { background-color: #f9a8d4 !important; }
+
+h2, h3, h4 {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color: #ec4899;
+    font-weight: 700;
+}
+h2::before { content: "🌸 "; }
+h3::before { content: "🦋 "; }
+h4::before { content: "🌼 ";}
+
+.modal-content {
+    border-radius: 1.5rem;
+    background-color: #fff0f6;
+    border: 2px solid #f9a8d4;
+}
+
+.chart-container {
+    background-color: #fffafa;
+    border: 1px dashed #f9a8d4;
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+footer {
+    background-color: #fdeff4;
+    color: #944b6f;
+    padding: 1rem;
+    border-top: 2px dashed #f9a8d4;
+    font-size: 0.9rem;
+    font-style: italic;
+    text-align: center;
+}
+
+main {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+/* Checkbox stilleri */
+.form-check {
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 1rem;
     transition: all 0.3s ease;
 }
 
-.anatomy-hotspot:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 10px rgba(255,0,0,0.7);
+.form-check:hover {
+    transform: translateX(5px);
 }
 
-.anatomy-hotspot .badge {
+.form-check-input {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.form-check-label {
+    position: relative;
+    color: #4b2e2e;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    display: inline-block;
+}
+
+.form-check-label::before {
+    content: '';
+    position: absolute;
+    left: -2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    background: #fff0f6;
+    border: 2px solid #f9a8d4;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 10px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 5px rgba(236, 72, 153, 0.2);
+}
+
+.form-check-input:checked + .form-check-label::before {
+    background: #ec4899;
+    border-color: #ec4899;
+    animation: heartBeat 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes heartBeat {
+    0% {
+        transform: translateY(-50%) scale(1);
+    }
+    14% {
+        transform: translateY(-50%) scale(1.3);
+    }
+    28% {
+        transform: translateY(-50%) scale(1);
+    }
+    42% {
+        transform: translateY(-50%) scale(1.2);
+    }
+    70% {
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+.form-check-input:checked + .form-check-label::after {
+    content: '❤';
+    position: absolute;
+    left: -2.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 0.9rem;
     font-weight: bold;
-    z-index: 2;
+    animation: heartPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes heartPop {
+    0% {
+        transform: translateY(-50%) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-50%) scale(1.2);
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Input alanları için özel stiller */
+.input-group {
+    position: relative;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.input-group:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15);
+}
+
+.input-group .form-control {
+    border: 2px solid #f9a8d4;
+    border-radius: 1rem 0 0 1rem;
+    padding: 12px 15px;
+    font-size: 1.1em;
+    background: #fff0f6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #4b2e2e;
+    font-weight: 500;
+}
+
+.input-group .form-control:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 0.25rem rgba(236, 72, 153, 0.25);
+    background: #fff;
+    transform: scale(1.02);
+}
+
+.input-group .input-group-text {
+    border: 2px solid #f9a8d4;
+    border-left: none;
+    border-radius: 0 1rem 1rem 0;
+    background: linear-gradient(45deg, #f472b6, #ec4899);
+    color: white;
+    font-weight: 600;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+    min-width: 80px;
+    text-align: center;
+}
+
+.input-group:hover .input-group-text {
+    background: linear-gradient(45deg, #ec4899, #f472b6);
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+}
+
+/* Input label stilleri */
+.form-label {
+    display: inline-block;
+    transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #4b2e2e;
+    font-size: 1.1em;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.form-label::before {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2em;
+    transition: all 0.3s ease;
+}
+
+.form-label:hover {
+    transform: translateX(5px);
+    color: #ec4899;
+}
+
+.form-label:hover::before {
+    transform: translateY(-50%) scale(1.2) rotate(10deg);
+}
+
+/* Gender select stilleri */
+#sex.form-select {
+    background-color: #fff0f6;
+    border: 2px solid #f9a8d4;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #4b2e2e;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ec4899' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+    appearance: none;
+}
+
+#sex.form-select:hover {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 0.25rem rgba(236, 72, 153, 0.1);
+    transform: translateY(-1px);
+}
+
+#sex.form-select:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 0.25rem rgba(236, 72, 153, 0.25);
+    background-color: #fff;
+}
+
+/* Anatomi Görselleştirmesi Stilleri */
+.anatomy-hotspot {
+    position: absolute;
+    background-color: rgba(249, 168, 212, 0.5);
+    border: 2px solid #ec4899;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.anatomy-hotspot:hover {
+    background-color: rgba(236, 72, 153, 0.7);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
 }
 
 #humanAnatomyContainer {
     position: relative;
-    width: 100%;
-    height: 500px;
+    overflow: hidden;
+    border-radius: 1rem;
+    background-color: #fff0f6;
+    box-shadow: inset 0 0 20px rgba(249, 168, 212, 0.3);
 }
 
 #anatomyImage {
+    max-width: 100%;
     max-height: 500px;
-    margin: 0 auto;
     display: block;
+    margin: 0 auto;
+    transition: all 0.3s ease;
 }
 
 #anatomyHotspots {
@@ -74,33 +438,77 @@ body {
 }
 
 #anatomyHotspots > div {
-    pointer-events: all;
+    pointer-events: auto;
 }
 
-.body-system-item {
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* Body Systems List Styling */
+#bodySystems .list-group-item {
+    background-color: #fff0f6;
+    border-color: #f9a8d4;
+    color: #4b2e2e;
+    transition: all 0.3s ease;
+    border-radius: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.body-system-item:hover {
-    background-color: #f0f0f0;
+#bodySystems .list-group-item:hover {
+    background-color: #fce7f3;
+    transform: translateX(5px);
 }
 
-/* Veri görselleştirmeleri */
-.visualizations-section {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
+#bodyPartSideEffects .list-group-item {
+    background-color: #fff0f6;
+    border-color: #f9a8d4;
+    transition: all 0.3s ease;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-    margin-bottom: 15px;
+#bodyPartSideEffects .list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2);
 }
 
-/* Genel stiller */
+/* Badge styling in body systems */
+#bodySystems .badge {
+    background-color: #ec4899;
+    transition: all 0.3s ease;
+}
+
+#bodySystems .list-group-item:hover .badge {
+    transform: scale(1.1);
+}
+
+/* Animation for hotspots */
+@keyframes pulseHotspot {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+.anatomy-hotspot {
+    animation: pulseHotspot 2s infinite;
+}
+
+/* Different pulse delay for variety */
+.anatomy-hotspot:nth-child(2n) {
+    animation-delay: 0.5s;
+}
+
+.anatomy-hotspot:nth-child(3n) {
+    animation-delay: 1s;
+}
+
+.anatomy-hotspot:nth-child(4n) {
+    animation-delay: 1.5s;
+}
+
+/* Risk indicators from original CSS */
 .risk-indicator {
     display: inline-block;
     width: 12px;
@@ -119,4 +527,61 @@ body {
 
 .risk-low {
     background-color: #28a745;
+}
+
+/* Text utilities */
+.text-success { color: #28a745 !important; }
+.text-warning { color: #ffc107 !important; }
+.text-danger { color: #dc3545 !important; }
+.text-muted { color: #6c757d !important; }
+
+/* Add modal dialog styles for risk details */
+#riskDetailsModal .modal-content {
+    border-radius: 1.5rem;
+    background-color: #fff0f6;
+    border: 2px solid #f9a8d4;
+}
+
+#medicationModal .modal-content {
+    border-radius: 1.5rem;
+    background-color: #fff0f6;
+    border: 2px solid #f9a8d4;
+}
+
+#sideEffectModal .modal-content {
+    border-radius: 1.5rem;
+    background-color: #fff0f6;
+    border: 2px solid #f9a8d4;
+}
+
+/* Heartbeat pattern */
+.heartbeat-pattern {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100px;
+    height: 90px;
+    border-radius: 50% / 40%;
+
+    background: repeating-radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.15),
+        rgba(255, 255, 255, 0.15) 4px,
+        transparent 4px,
+        transparent 8px
+    );
+
+    animation: pulsePattern 2.5s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes pulsePattern {
+    0% { background-position: 0 0; }
+    100% { background-position: 16px 16px; }
+}
+
+/* Add styles for input focus */
+.input-focus {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15);
 } 
