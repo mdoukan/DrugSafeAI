@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}User Medical History{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow-soft">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Patient Medical History</h3>
+            </div>
+            <div class="card-body">
+                <!-- User Information Form -->
+                <form id="userForm" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="tc_number">TC Number (National ID)*</label>
+                                <input type="text" class="form-control" id="tc_number" name="tc_number" required 
+                                       maxlength="11" pattern="[0-9]{11}" title="TC Number must be 11 digits">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="first_name">First Name*</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="last_name">Last Name*</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" id="viewHistoryBtn" class="btn btn-info">View Medical History</button>
+                        <button type="button" id="registerBtn" class="btn btn-primary">Register/Save</button>
+                    </div>
+                </form>
+                
+                <div id="userDataSection" class="d-none">
+                    <ul class="nav nav-tabs" id="userDataTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="medical-history-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#medical-history" type="button" role="tab">Medical History</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="medications-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#medications" type="button" role="tab">Medications</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="userDataTabsContent">
+                        <!-- Medical History Tab -->
+                        <div class="tab-pane fade show active" id="medical-history" role="tabpanel">
+                            <!-- Add Medical History Form -->
+                            <form id="medicalHistoryForm" class="mb-4">
+                                <h4 class="mb-3">Add Medical Condition</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="condition">Medical Condition*</label>
+                                            <input type="text" class="form-control" id="condition" name="condition" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="diagnosis_date">Diagnosis Date</label>
+                                            <input type="date" class="form-control" id="diagnosis_date" name="diagnosis_date">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="history_notes">Notes</label>
+                                    <textarea class="form-control" id="history_notes" name="notes" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Medical Condition</button>
+                            </form>
+                            
+                            <!-- Medical History List -->
+                            <div id="medicalHistoryList">
+                                <h4 class="mb-3">Medical History</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Condition</th>
+                                                <th>Diagnosis Date</th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="medicalHistoryTableBody">
+                                            <!-- Medical history records will be inserted here -->
+                                            <tr class="no-records-row">
+                                                <td colspan="3" class="text-center">No medical history records found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Medications Tab -->
+                        <div class="tab-pane fade" id="medications" role="tabpanel">
+                            <!-- Add Medication Form -->
+                            <form id="medicationForm" class="mb-4">
+                                <h4 class="mb-3">Add Medication</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="medication_name">Medication Name*</label>
+                                            <input type="text" class="form-control" id="medication_name" name="name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label for="dosage">Dosage</label>
+                                            <input type="text" class="form-control" id="dosage" name="dosage" 
+                                                   placeholder="e.g., 500mg">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label for="frequency">Frequency</label>
+                                            <input type="text" class="form-control" id="frequency" name="frequency" 
+                                                   placeholder="e.g., Twice daily">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="start_date">Start Date</label>
+                                            <input type="date" class="form-control" id="start_date" name="start_date">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="end_date">End Date</label>
+                                            <input type="date" class="form-control" id="end_date" name="end_date">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="medication_notes">Notes</label>
+                                    <textarea class="form-control" id="medication_notes" name="notes" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Medication</button>
+                            </form>
+                            
+                            <!-- Medications List -->
+                            <div id="medicationsList">
+                                <h4 class="mb-3">Current Medications</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Dosage</th>
+                                                <th>Frequency</th>
+                                                <th>Start Date</th>
+                                                <th>End Date</th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="medicationsTableBody">
+                                            <!-- Medications will be inserted here -->
+                                            <tr class="no-records-row">
+                                                <td colspan="6" class="text-center">No medications found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert for messages -->
+<div id="alertContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 5"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Global variables
+    let currentUserId = null;
+    
+    // DOM elements
+    const userForm = document.getElementById('userForm');
+    const tcNumberInput = document.getElementById('tc_number');
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const userDataSection = document.getElementById('userDataSection');
+    const medicalHistoryForm = document.getElementById('medicalHistoryForm');
+    const medicationForm = document.getElementById('medicationForm');
+    const medicalHistoryTableBody = document.getElementById('medicalHistoryTableBody');
+    const medicationsTableBody = document.getElementById('medicationsTableBody');
+    const alertContainer = document.getElementById('alertContainer');
+    
+    // Helper functions
+    function showAlert(message, type = 'success') {
+        const alertId = 'alert-' + Date.now();
+        const alertHtml = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                alertElement.remove();
+            }
+        }, 5000);
+    }
+    
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        return dateString;
+    }
+    
+    // Event Listeners
+    registerBtn.addEventListener('click', async () => {
+        const tcNumber = tcNumberInput.value.trim();
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        
+        if (!tcNumber || !firstName || !lastName) {
+            showAlert('Please fill in all required fields', 'danger');
+            return;
+        }
+        
+        // Check TC number format
+        if (!/^\d{11}$/.test(tcNumber)) {
+            showAlert('TC Number must be 11 digits', 'danger');
+            return;
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('tc_number', tcNumber);
+            formData.append('first_name', firstName);
+            formData.append('last_name', lastName);
+            
+            const response = await fetch('/user/register', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('User registered successfully');
+                currentUserId = data.user_id;
+                userDataSection.classList.remove('d-none');
+                loadUserData(currentUserId);
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    });
+    
+    viewHistoryBtn.addEventListener('click', async () => {
+        const tcNumber = tcNumberInput.value.trim();
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        
+        if (!tcNumber || !firstName || !lastName) {
+            showAlert('Please fill in all required fields', 'danger');
+            return;
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('tc_number', tcNumber);
+            formData.append('first_name', firstName);
+            formData.append('last_name', lastName);
+            
+            const response = await fetch('/user/find', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                if (data.user_exists) {
+                    currentUserId = data.user_id;
+                    userDataSection.classList.remove('d-none');
+                    loadUserData(currentUserId);
+                    showAlert('User found, loading medical history');
+                } else {
+                    showAlert('User not found. Please register first.', 'warning');
+                    userDataSection.classList.add('d-none');
+                }
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    });
+    
+    medicalHistoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentUserId) {
+            showAlert('Please register or find a user first', 'danger');
+            return;
+        }
+        
+        try {
+            const formData = new FormData(medicalHistoryForm);
+            
+            const response = await fetch(`/user/${currentUserId}/medical-history`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Medical history added successfully');
+                medicalHistoryForm.reset();
+                loadUserData(currentUserId);
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    });
+    
+    medicationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentUserId) {
+            showAlert('Please register or find a user first', 'danger');
+            return;
+        }
+        
+        try {
+            const formData = new FormData(medicationForm);
+            
+            const response = await fetch(`/user/${currentUserId}/medication`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Medication added successfully');
+                medicationForm.reset();
+                loadUserData(currentUserId);
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    });
+    
+    async function loadUserData(userId) {
+        try {
+            const response = await fetch(`/user/${userId}/medical-history`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update medical history table
+                renderMedicalHistory(data.medical_history);
+                
+                // Update medications table
+                renderMedications(data.medications);
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    }
+    
+    function renderMedicalHistory(medicalHistory) {
+        if (medicalHistory.length === 0) {
+            medicalHistoryTableBody.innerHTML = `
+                <tr class="no-records-row">
+                    <td colspan="3" class="text-center">No medical history records found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        medicalHistory.forEach(history => {
+            html += `
+                <tr>
+                    <td>${history.condition}</td>
+                    <td>${formatDate(history.diagnosis_date)}</td>
+                    <td>${history.notes || ''}</td>
+                </tr>
+            `;
+        });
+        
+        medicalHistoryTableBody.innerHTML = html;
+    }
+    
+    function renderMedications(medications) {
+        if (medications.length === 0) {
+            medicationsTableBody.innerHTML = `
+                <tr class="no-records-row">
+                    <td colspan="6" class="text-center">No medications found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        medications.forEach(medication => {
+            html += `
+                <tr>
+                    <td>${medication.name}</td>
+                    <td>${medication.dosage || ''}</td>
+                    <td>${medication.frequency || ''}</td>
+                    <td>${formatDate(medication.start_date)}</td>
+                    <td>${formatDate(medication.end_date)}</td>
+                    <td>${medication.notes || ''}</td>
+                </tr>
+            `;
+        });
+        
+        medicationsTableBody.innerHTML = html;
+    }
+</script>
+{% endblock %} 

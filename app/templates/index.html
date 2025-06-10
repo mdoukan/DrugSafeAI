@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8 col-md-10">
+        <!-- Medical History Feature Card -->
+        <div class="card shadow-soft rounded-4 mb-4">
+            <div class="card-header text-center bg-info text-white rounded-top">
+                <h2>Patient Medical History</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>Track and View Your Medical History</h4>
+                        <p>Our new feature allows you to:</p>
+                        <ul>
+                            <li>Enter your TC number (national ID) and personal information</li>
+                            <li>Save your medical history and medications</li>
+                            <li>View your previously saved medical history anytime</li>
+                        </ul>
+                        <a href="{{ url_for('user.user_home') }}" class="btn btn-info">Go to Medical History</a>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="rounded-circle bg-light p-4 mx-auto" style="width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                            <span style="font-size: 5rem;">📋</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-soft rounded-4">
+            <div class="card-header text-center bg-pink rounded-top">
+                <h2>Medication Side Effect Prediction</h2>
+            </div>
+            <div class="card-body">
+                <form id="predictionForm" action="/predict" method="post" novalidate>
+                    <!-- User Information Fields -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="tc_number" class="form-label">🆔 TC Number</label>
+                            <input type="text" class="form-control" id="tc_number" name="tc_number" maxlength="11" pattern="[0-9]{11}" title="TC Number must be 11 digits" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="first_name" class="form-label">👤 First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="last_name" class="form-label">👤 Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="save_history" name="save_history" checked>
+                                <label class="form-check-label" for="save_history">
+                                    Save medical history and medications to my profile
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="age" class="form-label">🎂 Age</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="age" name="age" required min="0" max="120" />
+                                <span class="input-group-text">years</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="weight" class="form-label">⚖️ Weight</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="weight" name="weight" required min="0" max="300" />
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="height" class="form-label">📏 Height</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="height" name="height" required min="0" max="250" />
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sex" class="form-label">👥 Gender</label>
+                            <select class="form-select" id="sex" name="sex" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="1">👨🏼 Male</option>
+                            <option value="2">👩🏼 Female</option>
+                            </select>
+                        </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="serious" name="serious">
+                                <label class="form-check-label" for="serious">
+                                🌸 Serious Condition
+                                </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="medicalHistory" class="form-label">📋 Medical History</label>
+                        <select multiple class="form-select" id="medicalHistory" name="medical_history">
+                            <option value="Hypertension">Hypertension</option>
+                            <option value="Diabetes">Diabetes</option>
+                            <option value="HeartDisease">Heart Disease</option>
+                            <option value="Asthma">Asthma</option>
+                            <option value="Cancer">Cancer</option>
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple conditions</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="medications" class="form-label">💊 Medications</label>
+                        <select multiple class="form-select" id="medications" name="medications">
+                            <option value="aspirin">Aspirin</option>
+                            <option value="ibuprofen">Ibuprofen</option>
+                            <option value="amoxicillin">Amoxicillin</option>
+                            <option value="metformin">Metformin</option>
+                            <option value="lisinopril">Lisinopril</option>
+                            <option value="atorvastatin">Atorvastatin</option>
+                            <option value="fluoxetine">Fluoxetine</option>
+                            <option value="omeprazole">Omeprazole</option>
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple medications</small>
+                    </div>
+
+                    <!-- Laboratuvar Testleri -->
+                    <div id="labTests" class="mb-3">
+                        <label class="form-label">🔬 Laboratory Tests</label>
+                        <div class="lab-test-container">
+                            <div class="row mb-2 lab-test-row">
+                                <div class="col-md-3">
+                                    <select class="form-select test-name" name="test-name" title="Test Name" aria-label="Test Name">
+                                        <option value="">Select test</option>
+                                        <option value="BloodPressure">Blood Pressure</option>
+                                        <option value="BloodSugar">Blood Sugar</option>
+                                        <option value="Cholesterol">Cholesterol</option>
+                                        <option value="Hemoglobin">Hemoglobin</option>
+                                        <option value="WhiteBloodCell">White Blood Cell Count</option>
+                                        <option value="Platelets">Platelets</option>
+                                        <option value="Creatinine">Creatinine</option>
+                                        <option value="ALT">ALT (Liver Function)</option>
+                                        <option value="AST">AST (Liver Function)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control test-result" name="test-result" placeholder="Result" aria-label="Test Result">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control test-unit" name="test-unit" placeholder="Unit" aria-label="Test Unit">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-danger remove-test">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="addLabTest">Add Lab Test</button>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-pink px-5">
+                            🌼 Predict Side Effects
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;">
+            <h4 class="alert-heading">Error!</h4>
+            <p id="errorText"></p>
+            <button class="btn btn-sm btn-danger" onclick="copyError()">Copy Error Message</button>
+        </div>
+
+        <!-- Prediction Results -->
+        <div id="results" class="mt-4" style="display: none;">
+            <div class="card shadow-soft rounded-4">
+                <div class="card-header text-center bg-pink rounded-top">
+                    <h3>Prediction Results</h3>
+                </div>
+                <div class="card-body" id="resultsContent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Veri Görselleştirme Kartı -->
+        <div id="visualizations" class="mt-4" style="display: none;">
+            <div class="card shadow-soft rounded-4">
+                <div class="card-header text-center bg-pink rounded-top">
+                    <h3>Risk Visualizations</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height:250px;">
+                                <canvas id="riskGauge"></canvas>
+                            </div>
+                            <h5 class="text-center mt-2">Overall Risk Level</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height:250px;">
+                                <canvas id="medicationRisksChart"></canvas>
+                            </div>
+                            <h5 class="text-center mt-2">Medication Risk Comparison</h5>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                <canvas id="sideEffectsChart"></canvas>
+                            </div>
+                            <h5 class="text-center mt-2">Potential Side Effects by Probability</h5>
+                            <div class="text-muted small text-center">
+                                <p>Data sourced from OpenFDA and medical research. Colors indicate severity level (red: high, orange: medium, green: low).<br>
+                                Click on any bar for detailed information about the side effect.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Görsel Yan Etki Raporu -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-pink">
+                                    <h5 class="mb-0">Visual Side Effect Report</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <div id="humanAnatomyContainer" style="height: 500px; position: relative;">
+                                                <img src="/static/images/human_anatomy.jpg" 
+                                                     id="anatomyImage" 
+                                                     class="img-fluid" 
+                                                     alt="Human Anatomy" 
+                                                     style="max-height: 500px; margin: 0 auto; display: block;"
+                                                     onerror="handleAnatomyImageError()">
+                                                <!-- Aktif noktalar buraya dinamik olarak eklenecek -->
+                                                <div id="anatomyHotspots"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="card">
+                                                <div class="card-header bg-pink text-white">
+                                                    <h6 class="mb-0">Body System Effects</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div id="bodySystems" class="list-group">
+                                                        <!-- Sistem sınıfları buraya dinamik olarak eklenecek -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card mt-3">
+                                                <div class="card-header bg-pink text-white">
+                                                    <h6 class="mb-0" id="selectedBodyPartTitle">Select a body part to see side effects</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div id="bodyPartSideEffects">
+                                                        <p class="text-muted">Click on a body part or system to see possible side effects.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <!-- Risk Details Modal -->
+<div class="modal fade" id="riskDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                <h5 class="modal-title">Detailed Risk Assessment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="riskDetailsContent">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert for messages -->
+        <div id="alertContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 5"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Show alert function
+function showAlert(message, type = 'success') {
+    const alertId = 'alert-' + Date.now();
+    const alertHtml = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    const alertContainer = document.getElementById('alertContainer');
+    if (alertContainer) {
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                alertElement.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Display prediction results
+function displayResults(data) {
+    const resultsContent = document.getElementById('resultsContent');
+    const resultsDiv = document.getElementById('results');
+    const visualizations = document.getElementById('visualizations');
+    
+    if (data.status === 'success' && data.data && data.data.results && data.data.results.length > 0) {
+        // Create results table
+        let resultsHTML = '<div class="table-responsive"><table class="table table-striped">';
+        resultsHTML += '<thead><tr><th>Medication</th><th>Risk Level</th><th>Probability</th><th>Recommendation</th></tr></thead>';
+        resultsHTML += '<tbody>';
+        
+        data.data.results.forEach(result => {
+            const riskLevel = result.risk_level || 'Unknown';
+            const riskColorClass = riskLevel === 'Low' ? 'text-success' : 
+                                 riskLevel === 'Medium' ? 'text-warning' : 'text-danger';
+            
+            resultsHTML += `<tr>
+                <td>${result.medication}</td>
+                <td><strong class="${riskColorClass}">${riskLevel}</strong></td>
+                <td>${Math.round(parseFloat(result.probability) * 100)}%</td>
+                <td>${result.recommendation}</td>
+            </tr>`;
+        });
+        
+        resultsHTML += '</tbody></table></div>';
+        resultsContent.innerHTML = resultsHTML;
+        resultsDiv.style.display = 'block';
+        
+        // Create charts and visualizations
+        visualizations.style.display = 'block';
+        createCharts(data.data);
+        
+        // If side effects are available, create the anatomy visualization
+        if (data.data.side_effects && data.data.side_effects.length > 0) {
+            // Make sure the side effects section is visible
+            document.querySelector('.row.mt-4 .card').style.display = 'block';
+            
+            // Already called in createCharts, but ensure it's done
+            console.log("Creating anatomy visualization with", data.data.side_effects.length, "side effects");
+        }
+    } else {
+        // No results or error
+        resultsContent.innerHTML = '<div class="alert alert-warning">No prediction results returned.</div>';
+        resultsDiv.style.display = 'block';
+        if (visualizations) {
+            visualizations.style.display = 'none';
+        }
+    }
+}
+
+// Make sure the form submission is handled correctly
+document.addEventListener('DOMContentLoaded', function() {
+    const predictionForm = document.getElementById('predictionForm');
+    if (predictionForm) {
+        predictionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const saveHistory = form.querySelector('#save_history').checked;
+            const tcNumber = form.querySelector('#tc_number').value.trim();
+            const firstName = form.querySelector('#first_name').value.trim();
+            const lastName = form.querySelector('#last_name').value.trim();
+            
+            // Check if user wants to save history but hasn't provided required info
+            if (saveHistory && (!tcNumber || !firstName || !lastName)) {
+                showAlert('Please enter your TC Number, First Name, and Last Name to save your medical history.', 'warning');
+                return;
+            }
+            
+            // If TC number is provided, validate it
+            if (tcNumber && !/^\d{11}$/.test(tcNumber)) {
+                showAlert('TC Number must be 11 digits', 'danger');
+                return;
+            }
+            
+            // Submit the form via AJAX
+            const formData = new FormData(form);
+            
+            // Show loading indicator
+            document.getElementById('resultsContent').innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Processing your request...</p></div>';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'error') {
+                    // Display error message
+                    document.getElementById('errorText').textContent = data.message;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('results').style.display = 'none';
+                } else {
+                    // Display prediction results
+                    displayResults(data);
+                    
+                    // Show notification if medical history was saved
+                    if (saveHistory && tcNumber && firstName && lastName) {
+                        showAlert('Your medical history and medications have been saved to your profile.', 'success');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('errorText').textContent = 'An unexpected error occurred. Please try again later.';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+            });
+        });
+    }
+    
+    // Setup Lab Test Add/Remove functionality
+    setupLabTestControls();
+});
+
+// Setup lab test add/remove functionality
+function setupLabTestControls() {
+    // Add lab test button
+    const addLabTestBtn = document.getElementById('addLabTest');
+    if (addLabTestBtn) {
+        addLabTestBtn.addEventListener('click', function() {
+            const container = document.querySelector('.lab-test-container');
+            const newRow = document.querySelector('.lab-test-row').cloneNode(true);
+            
+            // Clear values
+            newRow.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+            });
+            
+            // Setup remove button
+            const removeBtn = newRow.querySelector('.remove-test');
+            removeBtn.addEventListener('click', function() {
+                newRow.remove();
+            });
+            
+            container.appendChild(newRow);
+        });
+    }
+    
+    // Setup existing remove buttons
+    document.querySelectorAll('.remove-test').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Don't remove if it's the only row
+            const rows = document.querySelectorAll('.lab-test-row');
+            if (rows.length > 1) {
+                this.closest('.lab-test-row').remove();
+            } else {
+                // Clear values instead
+                const inputs = this.closest('.lab-test-row').querySelectorAll('input, select');
+                inputs.forEach(input => input.value = '');
+            }
+        });
+    });
+}
+</script>
+{% endblock %} 
