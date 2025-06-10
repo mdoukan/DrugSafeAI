@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 import logging
 import traceback
-from app.models.database import db, User, MedicalHistory, Medication
+from app.models.database import db, User, MedicalHistory, Medication, LabTest
 from datetime import datetime
 
 # Configure logging
@@ -107,7 +107,7 @@ def register_user():
 
 @user_bp.route('/user/<int:user_id>/medical-history', methods=['GET'])
 def get_medical_history(user_id):
-    """Get medical history and medications for a user."""
+    """Get medical history, medications, and lab tests for a user."""
     try:
         user = User.query.get(user_id)
         
@@ -136,6 +136,17 @@ def get_medical_history(user_id):
             'notes': m.notes
         } for m in medications]
         
+        # Get lab tests
+        lab_tests = LabTest.query.filter_by(user_id=user_id).all()
+        lab_test_list = [{
+            'id': t.id,
+            'test_name': t.test_name,
+            'result': t.result,
+            'unit': t.unit,
+            'test_date': t.test_date.strftime('%Y-%m-%d') if t.test_date else None,
+            'notes': t.notes
+        } for t in lab_tests]
+        
         return jsonify({
             'status': 'success',
             'user': {
@@ -145,7 +156,8 @@ def get_medical_history(user_id):
                 'last_name': user.last_name
             },
             'medical_history': medical_history_list,
-            'medications': medication_list
+            'medications': medication_list,
+            'lab_tests': lab_test_list
         })
         
     except Exception as e:
@@ -266,5 +278,64 @@ def add_medication(user_id):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error adding medication: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'status': 'error', 'message': f'An error occurred: {str(e)}'}), 500
+
+@user_bp.route('/user/<int:user_id>/lab-test', methods=['POST'])
+def add_lab_test(user_id):
+    """Add a new lab test record for a user."""
+    try:
+        user = User.query.get(user_id)
+        
+        if not user:
+            logger.error(f"User not found: {user_id}")
+            return jsonify({'error': 'User not found'}), 404
+            
+        test_name = request.form.get('test_name')
+        result = request.form.get('result')
+        unit = request.form.get('unit')
+        test_date = request.form.get('test_date')
+        notes = request.form.get('notes')
+        
+        # Validate input
+        if not test_name:
+            logger.error("Missing required field: test_name")
+            return jsonify({'error': 'Test name is required'}), 400
+            
+        if not result:
+            logger.error("Missing required field: result")
+            return jsonify({'error': 'Test result is required'}), 400
+            
+        # Parse date if provided
+        parsed_test_date = None
+        if test_date:
+            try:
+                parsed_test_date = datetime.strptime(test_date, '%Y-%m-%d').date()
+            except ValueError:
+                logger.error(f"Invalid test date format: {test_date}")
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+                
+        # Create new lab test record
+        lab_test = LabTest(
+            user_id=user_id,
+            test_name=test_name,
+            result=result,
+            unit=unit,
+            test_date=parsed_test_date,
+            notes=notes
+        )
+        
+        db.session.add(lab_test)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'lab_test_id': lab_test.id,
+            'message': 'Lab test added successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error adding lab test: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': f'An error occurred: {str(e)}'}), 500 

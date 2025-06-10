@@ -406,6 +406,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Submit the form via AJAX
             const formData = new FormData(form);
             
+            // Process lab tests to make sure they're included in the form data
+            const labRows = document.querySelectorAll('.lab-test-row');
+            let labIndex = 0;
+            
+            labRows.forEach(row => {
+                const testName = row.querySelector('.test-name').value;
+                const testResult = row.querySelector('.test-result').value;
+                const testUnit = row.querySelector('.test-unit')?.value || '';
+                
+                if (testName && testResult) {
+                    formData.append(`lab-name-${labIndex}`, testName);
+                    formData.append(`lab-value-${labIndex}`, testResult);
+                    formData.append(`lab-unit-${labIndex}`, testUnit);
+                    labIndex++;
+                }
+            });
+            
             // Show loading indicator
             document.getElementById('resultsContent').innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Processing your request...</p></div>';
             document.getElementById('results').style.display = 'block';
@@ -428,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Show notification if medical history was saved
                     if (saveHistory && tcNumber && firstName && lastName) {
-                        showAlert('Your medical history and medications have been saved to your profile.', 'success');
+                        showAlert('Your medical history, medications, and lab tests have been saved to your profile.', 'success');
                     }
                 }
             })
@@ -445,44 +462,61 @@ document.addEventListener('DOMContentLoaded', function() {
     setupLabTestControls();
 });
 
-// Setup lab test add/remove functionality
+// Setup lab test controls
 function setupLabTestControls() {
-    // Add lab test button
     const addLabTestBtn = document.getElementById('addLabTest');
-    if (addLabTestBtn) {
+    const labTestContainer = document.querySelector('.lab-test-container');
+    
+    if (addLabTestBtn && labTestContainer) {
+        // Add a new lab test row
         addLabTestBtn.addEventListener('click', function() {
-            const container = document.querySelector('.lab-test-container');
-            const newRow = document.querySelector('.lab-test-row').cloneNode(true);
+            const newRow = document.createElement('div');
+            newRow.className = 'row mb-2 lab-test-row';
+            newRow.innerHTML = `
+                <div class="col-md-3">
+                    <select class="form-select test-name" name="test-name" title="Test Name">
+                        <option value="">Select test</option>
+                        <option value="Blood Pressure">Blood Pressure</option>
+                        <option value="Blood Sugar">Blood Sugar</option>
+                        <option value="Cholesterol">Cholesterol</option>
+                        <option value="Hemoglobin">Hemoglobin</option>
+                        <option value="White Blood Cell">White Blood Cell Count</option>
+                        <option value="Platelets">Platelets</option>
+                        <option value="Creatinine">Creatinine</option>
+                        <option value="ALT">ALT (Liver Function)</option>
+                        <option value="AST">AST (Liver Function)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control test-result" name="test-result" placeholder="Result">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control test-unit" name="test-unit" placeholder="Unit">
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-danger remove-test">Remove</button>
+                </div>
+            `;
+            labTestContainer.appendChild(newRow);
             
-            // Clear values
-            newRow.querySelectorAll('input, select').forEach(input => {
-                input.value = '';
+            // Add event listener to the new remove button
+            const removeButton = newRow.querySelector('.remove-test');
+            removeButton.addEventListener('click', function() {
+                labTestContainer.removeChild(newRow);
             });
-            
-            // Setup remove button
-            const removeBtn = newRow.querySelector('.remove-test');
-            removeBtn.addEventListener('click', function() {
-                newRow.remove();
+        });
+        
+        // Set up existing remove buttons
+        const existingRemoveButtons = document.querySelectorAll('.remove-test');
+        existingRemoveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const row = button.closest('.lab-test-row');
+                if (row) {
+                    labTestContainer.removeChild(row);
+                }
             });
-            
-            container.appendChild(newRow);
         });
     }
-    
-    // Setup existing remove buttons
-    document.querySelectorAll('.remove-test').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Don't remove if it's the only row
-            const rows = document.querySelectorAll('.lab-test-row');
-            if (rows.length > 1) {
-                this.closest('.lab-test-row').remove();
-            } else {
-                // Clear values instead
-                const inputs = this.closest('.lab-test-row').querySelectorAll('input, select');
-                inputs.forEach(input => input.value = '');
-            }
-        });
-    });
 }
 </script>
 {% endblock %} 

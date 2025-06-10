@@ -3,7 +3,7 @@ import logging
 import traceback
 from app.services.prediction_service import PredictionService
 from app.services.faers_service import FaersService
-from app.models.database import db, User, MedicalHistory, Medication
+from app.models.database import db, User, MedicalHistory, Medication, LabTest
 from datetime import datetime
 
 # Configure logging
@@ -148,21 +148,35 @@ def predict():
                 
             # Laboratuvar testleri
             lab_tests = []
-            # Form'dan laboratuvar test verilerini işle (formatta: lab_name, lab_value şeklinde)
-            # Örnek: lab-name-0=BloodPressure&lab-value-0=120
-            i = 0
-            while f'lab-name-{i}' in request.form and f'lab-value-{i}' in request.form:
-                name = request.form.get(f'lab-name-{i}')
-                value = request.form.get(f'lab-value-{i}')
-                if name and value:
-                    lab_tests.append({
-                        'name': name,
-                        'value': value
-                    })
-                i += 1
+            # Log all form keys to help debug
+            logger.info(f"Form keys: {list(request.form.keys())}")
+            
+            # Check for lab test data in the form
+            lab_index = 0
+            while True:
+                lab_name_key = f'lab-name-{lab_index}'
+                lab_value_key = f'lab-value-{lab_index}'
+                
+                if lab_name_key in request.form and lab_value_key in request.form:
+                    test_name = request.form.get(lab_name_key)
+                    test_value = request.form.get(lab_value_key)
+                    test_unit = request.form.get(f'lab-unit-{lab_index}', '')
+                    
+                    if test_name and test_value:
+                        logger.info(f"Found lab test in form: {test_name}={test_value} {test_unit}")
+                        lab_tests.append({
+                            'name': test_name,
+                            'value': test_value,
+                            'unit': test_unit
+                        })
+                    
+                    lab_index += 1
+                else:
+                    break
             
             if lab_tests:
                 data['laboratory_tests'] = lab_tests
+                logger.info(f"Found {len(lab_tests)} lab tests in form")
         
         logger.info(f"Received prediction request with data: {data}")
         
@@ -183,10 +197,11 @@ def predict():
             return jsonify({'status': 'error', 'message': 'Please select at least one medication'}), 400
             
         # Save medical history and medications if requested
+        user_id = None
         if data.get('save_history') and data.get('tc_number') and data.get('first_name') and data.get('last_name'):
             try:
-                save_user_data(data)
-                logger.info("User medical history and medications saved successfully")
+                user_id = save_user_data(data)
+                logger.info(f"User medical history saved successfully for user ID: {user_id}")
             except Exception as e:
                 logger.error(f"Error saving user data: {str(e)}")
                 # Continue with prediction even if saving fails
@@ -195,6 +210,11 @@ def predict():
         try:
             results = prediction_service.predict_side_effects(data)
             logger.info(f"Prediction results: {results}")
+            
+            # Add user_id to the response if available
+            if user_id:
+                results['user_id'] = user_id
+                
             return jsonify(results)
         except Exception as e:
             logger.error(f"Error during prediction: {str(e)}")
@@ -263,5 +283,47 @@ def save_user_data(data):
                 )
                 db.session.add(medication)
     
+    # Save lab tests from the form
+    lab_index = 0
+    lab_tests_found = False
+    
+    # Check if we have lab test data in the form
+    while True:
+        lab_name_key = f'lab-name-{lab_index}'
+        lab_value_key = f'lab-value-{lab_index}'
+        
+        if lab_name_key in request.form and lab_value_key in request.form:
+            lab_tests_found = True
+            test_name = request.form.get(lab_name_key)
+            test_result = request.form.get(lab_value_key)
+            test_unit = request.form.get(f'lab-unit-{lab_index}', '')
+            
+            if test_name and test_result:
+                # Check if this lab test already exists for the user
+                existing = LabTest.query.filter_by(
+                    user_id=user.id,
+                    test_name=test_name,
+                    result=test_result
+                ).first()
+                
+                if not existing:
+                    logger.info(f"Saving lab test: {test_name}={test_result} {test_unit}")
+                    lab_test = LabTest(
+                        user_id=user.id,
+                        test_name=test_name,
+                        result=test_result,
+                        unit=test_unit,
+                        test_date=datetime.today().date()
+                    )
+                    db.session.add(lab_test)
+            
+            lab_index += 1
+        else:
+            break
+    
+    if lab_tests_found:
+        logger.info(f"Saved {lab_index} lab tests for user {user.id}")
+    
     # Commit changes
-    db.session.commit() 
+    db.session.commit()
+    return user.id 

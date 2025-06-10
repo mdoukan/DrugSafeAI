@@ -50,6 +50,10 @@
                             <button class="nav-link" id="medications-tab" data-bs-toggle="tab" 
                                     data-bs-target="#medications" type="button" role="tab">Medications</button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="lab-tests-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#lab-tests" type="button" role="tab">Lab Tests</button>
+                        </li>
                     </ul>
                     
                     <div class="tab-content p-3 border border-top-0 rounded-bottom" id="userDataTabsContent">
@@ -175,6 +179,85 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Lab Tests Tab -->
+                        <div class="tab-pane fade" id="lab-tests" role="tabpanel">
+                            <!-- Add Lab Test Form -->
+                            <form id="labTestForm" class="mb-4">
+                                <h4 class="mb-3">Add Lab Test</h4>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="test_name">Test Name*</label>
+                                            <select class="form-select" id="test_name" name="test_name" required>
+                                                <option value="">Select Test</option>
+                                                <option value="Blood Pressure">Blood Pressure</option>
+                                                <option value="Blood Sugar">Blood Sugar</option>
+                                                <option value="Cholesterol">Cholesterol</option>
+                                                <option value="Hemoglobin">Hemoglobin</option>
+                                                <option value="White Blood Cell">White Blood Cell Count</option>
+                                                <option value="Platelets">Platelets</option>
+                                                <option value="Creatinine">Creatinine</option>
+                                                <option value="ALT">ALT (Liver Function)</option>
+                                                <option value="AST">AST (Liver Function)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="test_result">Result*</label>
+                                            <input type="text" class="form-control" id="test_result" name="result" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="test_unit">Unit</label>
+                                            <input type="text" class="form-control" id="test_unit" name="unit" 
+                                                   placeholder="e.g., mg/dL">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="test_date">Test Date</label>
+                                            <input type="date" class="form-control" id="test_date" name="test_date">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="test_notes">Notes</label>
+                                            <textarea class="form-control" id="test_notes" name="notes" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Lab Test</button>
+                            </form>
+                            
+                            <!-- Lab Tests List -->
+                            <div id="labTestsList">
+                                <h4 class="mb-3">Lab Test Results</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Test Name</th>
+                                                <th>Result</th>
+                                                <th>Unit</th>
+                                                <th>Test Date</th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="labTestsTableBody">
+                                            <!-- Lab tests will be inserted here -->
+                                            <tr class="no-records-row">
+                                                <td colspan="5" class="text-center">No lab test records found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -201,8 +284,10 @@
     const userDataSection = document.getElementById('userDataSection');
     const medicalHistoryForm = document.getElementById('medicalHistoryForm');
     const medicationForm = document.getElementById('medicationForm');
+    const labTestForm = document.getElementById('labTestForm');
     const medicalHistoryTableBody = document.getElementById('medicalHistoryTableBody');
     const medicationsTableBody = document.getElementById('medicationsTableBody');
+    const labTestsTableBody = document.getElementById('labTestsTableBody');
     const alertContainer = document.getElementById('alertContainer');
     
     // Helper functions
@@ -378,6 +463,37 @@
         }
     });
     
+    labTestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentUserId) {
+            showAlert('Please register or find a user first', 'danger');
+            return;
+        }
+        
+        try {
+            const formData = new FormData(labTestForm);
+            
+            const response = await fetch(`/user/${currentUserId}/lab-test`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Lab test added successfully');
+                labTestForm.reset();
+                loadUserData(currentUserId);
+            } else {
+                showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An unexpected error occurred', 'danger');
+        }
+    });
+    
     async function loadUserData(userId) {
         try {
             const response = await fetch(`/user/${userId}/medical-history`);
@@ -389,6 +505,9 @@
                 
                 // Update medications table
                 renderMedications(data.medications);
+                
+                // Update lab tests table
+                renderLabTests(data.lab_tests);
             } else {
                 showAlert(`Error: ${data.message || 'An error occurred'}`, 'danger');
             }
@@ -447,6 +566,32 @@
         });
         
         medicationsTableBody.innerHTML = html;
+    }
+    
+    function renderLabTests(labTests) {
+        if (labTests.length === 0) {
+            labTestsTableBody.innerHTML = `
+                <tr class="no-records-row">
+                    <td colspan="5" class="text-center">No lab test records found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        labTests.forEach(test => {
+            html += `
+                <tr>
+                    <td>${test.test_name}</td>
+                    <td>${test.result}</td>
+                    <td>${test.unit || ''}</td>
+                    <td>${formatDate(test.test_date)}</td>
+                    <td>${test.notes || ''}</td>
+                </tr>
+            `;
+        });
+        
+        labTestsTableBody.innerHTML = html;
     }
 </script>
 {% endblock %} 

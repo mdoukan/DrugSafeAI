@@ -15,6 +15,7 @@ class User(db.Model):
     # Relationships
     medical_histories = db.relationship('MedicalHistory', backref='user', lazy=True, cascade="all, delete-orphan")
     medications = db.relationship('Medication', backref='user', lazy=True, cascade="all, delete-orphan")
+    lab_tests = db.relationship('LabTest', backref='user', lazy=True, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name}>"
@@ -46,4 +47,19 @@ class Medication(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
-        return f"<Medication {self.name}>" 
+        return f"<Medication {self.name}>"
+
+class LabTest(db.Model):
+    __tablename__ = 'lab_tests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    test_name = db.Column(db.String(100), nullable=False)
+    result = db.Column(db.String(50), nullable=False)
+    unit = db.Column(db.String(20), nullable=True)
+    test_date = db.Column(db.Date, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<LabTest {self.test_name}: {self.result}>" 
