@@ -726,13 +726,15 @@ function createAnatomyVisualization(sideEffects) {
         bodyPartSideEffects.innerHTML = '<p class="text-muted">Click on a body part or system to see possible side effects.</p>';
     }
     
-    // Define body parts and their positions
+    // Define body parts and their positions (with more accurate coordinates)
     const bodyParts = [
-        { id: 'head', name: 'Head', x: 50, y: 10, width: 20, height: 15, system: 'Neurological' },
-        { id: 'chest', name: 'Chest', x: 50, y: 30, width: 30, height: 20, system: 'Cardiovascular' },
-        { id: 'abdomen', name: 'Abdomen', x: 50, y: 50, width: 30, height: 15, system: 'Gastrointestinal' },
-        { id: 'arms', name: 'Arms', x: 25, y: 35, width: 15, height: 25, system: 'Musculoskeletal' },
-        { id: 'legs', name: 'Legs', x: 50, y: 70, width: 30, height: 25, system: 'Musculoskeletal' }
+        { id: 'head', name: 'Head', x: 50, y: 7, width: 12, height: 12, system: 'Neurological' },
+        { id: 'chest', name: 'Chest', x: 50, y: 22, width: 18, height: 10, system: 'Cardiovascular' },
+        { id: 'abdomen', name: 'Abdomen', x: 50, y: 35, width: 16, height: 12, system: 'Gastrointestinal' },
+        { id: 'arms_right', name: 'Right Arm', x: 71, y: 25, width: 12, height: 18, system: 'Musculoskeletal' },
+        { id: 'arms_left', name: 'Left Arm', x: 29, y: 25, width: 12, height: 18, system: 'Musculoskeletal' },
+        { id: 'legs_right', name: 'Right Leg', x: 57, y: 65, width: 10, height: 25, system: 'Musculoskeletal' },
+        { id: 'legs_left', name: 'Left Leg', x: 43, y: 65, width: 10, height: 25, system: 'Musculoskeletal' }
     ];
     
     // Define system to body map
@@ -741,8 +743,8 @@ function createAnatomyVisualization(sideEffects) {
         'Cardiovascular': ['chest'],
         'Respiratory': ['chest'],
         'Gastrointestinal': ['abdomen'],
-        'Musculoskeletal': ['arms', 'legs'],
-        'Dermatological': ['head', 'chest', 'abdomen', 'arms', 'legs'],
+        'Musculoskeletal': ['arms_right', 'arms_left', 'legs_right', 'legs_left'],
+        'Dermatological': ['head', 'chest', 'abdomen', 'arms_right', 'arms_left', 'legs_right', 'legs_left'],
         'Immunological': ['whole_body'],
         'Endocrine': ['abdomen'],
         'Renal': ['abdomen'],
@@ -809,13 +811,29 @@ function createAnatomyVisualization(sideEffects) {
         }
         
         if (hasEffects) {
-            // Create hotspot element
+            // Create hotspot element with fixed pixel size for better circles
             const hotspot = document.createElement('div');
             hotspot.className = 'anatomy-hotspot';
-            hotspot.style.left = `${part.x}%`;
-            hotspot.style.top = `${part.y}%`;
-            hotspot.style.width = `${part.width}%`;
-            hotspot.style.height = `${part.height}%`;
+            
+            // Calculate size based on body part (fixed pixel size instead of percentage)
+            let size;
+            if (part.id === 'head') {
+                size = 80;
+            } else if (part.id === 'chest') {
+                size = 120;
+            } else if (part.id === 'abdomen') {
+                size = 110;
+            } else if (part.id.includes('arms')) {
+                size = 90;
+            } else if (part.id.includes('legs')) {
+                size = 100;
+            }
+            
+            // Position is still percentage-based for responsiveness
+            hotspot.style.left = `calc(${part.x}% - ${size/2}px)`;
+            hotspot.style.top = `calc(${part.y}% - ${size/2}px)`;
+            hotspot.style.width = `${size}px`;
+            hotspot.style.height = `${size}px`;
             hotspot.title = part.name;
             
             // Add click event

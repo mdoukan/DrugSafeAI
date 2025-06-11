@@ -398,17 +398,22 @@ main {
 /* Anatomi Görselleştirmesi Stilleri */
 .anatomy-hotspot {
     position: absolute;
-    background-color: rgba(249, 168, 212, 0.5);
+    background-color: rgba(249, 168, 212, 0.4);
     border: 2px solid #ec4899;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 10;
+    transform-origin: center;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .anatomy-hotspot:hover {
-    background-color: rgba(236, 72, 153, 0.7);
-    transform: scale(1.1);
+    background-color: rgba(236, 72, 153, 0.6);
+    transform: scale(1.05);
     box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
 }
 
@@ -486,26 +491,26 @@ main {
         opacity: 0.7;
     }
     50% {
-        transform: scale(1.1);
-        opacity: 1;
+        transform: scale(1.05);
+        opacity: 0.9;
     }
 }
 
 .anatomy-hotspot {
-    animation: pulseHotspot 2s infinite;
+    animation: pulseHotspot 3s infinite ease-in-out;
 }
 
 /* Different pulse delay for variety */
 .anatomy-hotspot:nth-child(2n) {
-    animation-delay: 0.5s;
+    animation-delay: 0.7s;
 }
 
 .anatomy-hotspot:nth-child(3n) {
-    animation-delay: 1s;
+    animation-delay: 1.4s;
 }
 
 .anatomy-hotspot:nth-child(4n) {
-    animation-delay: 1.5s;
+    animation-delay: 2.1s;
 }
 
 /* Risk indicators from original CSS */
