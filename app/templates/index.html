@@ -104,15 +104,29 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="medicalHistory" class="form-label">📋 Medical History</label>
-                        <select multiple class="form-select" id="medicalHistory" name="medical_history">
-                            <option value="Hypertension">Hypertension</option>
-                            <option value="Diabetes">Diabetes</option>
-                            <option value="HeartDisease">Heart Disease</option>
-                            <option value="Asthma">Asthma</option>
-                            <option value="Cancer">Cancer</option>
-                        </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple conditions</small>
+                        <label class="form-label">📋 Medical History</label>
+                        <div id="medicalHistoryCheckboxes">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mh-hypertension" name="medical_history" value="Hypertension">
+                                <label class="form-check-label" for="mh-hypertension">Hypertension</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mh-diabetes" name="medical_history" value="Diabetes">
+                                <label class="form-check-label" for="mh-diabetes">Diabetes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mh-heartdisease" name="medical_history" value="HeartDisease">
+                                <label class="form-check-label" for="mh-heartdisease">Heart Disease</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mh-asthma" name="medical_history" value="Asthma">
+                                <label class="form-check-label" for="mh-asthma">Asthma</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mh-cancer" name="medical_history" value="Cancer">
+                                <label class="form-check-label" for="mh-cancer">Cancer</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-4">
