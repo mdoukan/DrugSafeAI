@@ -70,7 +70,7 @@ function calculateConsistentRiskValues(data) {
 function determineRiskLevel(probability) {
     if (probability > 0.60) {
         return 'High';
-    } else if (probability > 0.40) {
+    } else if (probability >= 0.300) {
         return 'Medium';
     } else {
         return 'Low';

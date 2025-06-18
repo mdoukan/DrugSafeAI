@@ -1,0 +1,38 @@
+{
+  "patient_data": {
+    "age": 70,
+    "medical_history": [
+      "hypertension",
+      "diabetes"
+    ],
+    "laboratory_tests": {
+      "creatinine": 1.8,
+      "alt": 35
+    },
+    "medications": [
+      "metformin",
+      "lisinopril"
+    ]
+  },
+  "current_drug": "aspirin",
+  "recommendations": [
+    {
+      "drug_name": "naproxen",
+      "class": "NSAID",
+      "similarity_score": 0.7000000000000002,
+      "risk_score": 0.6333333333333333,
+      "recommendation_score": 0.25666666666666677,
+      "indications": [
+        "pain",
+        "inflammation",
+        "arthritis"
+      ],
+      "side_effects": [
+        "gastrointestinal_bleeding",
+        "cardiovascular_risk"
+      ],
+      "mechanism": "COX inhibitor",
+      "reasoning": "Similar mechanism of action (COX inhibitor); Shorter half-life may be safer in elderly patients"
+    }
+  ]
+}

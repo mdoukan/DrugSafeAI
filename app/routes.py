@@ -5,6 +5,8 @@ from app.services.prediction_service import PredictionService
 from app.services.faers_service import FaersService
 from app.models.database import db, User, MedicalHistory, Medication, LabTest
 from datetime import datetime
+from intelligent_drug_recommendation import IntelligentDrugRecommendation
+from drug_data_api import DrugDataAPI
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -13,6 +15,14 @@ logger = logging.getLogger(__name__)
 main = Blueprint('main', __name__)
 prediction_service = PredictionService()
 faers_service = FaersService()
+
+# Initialize both systems
+prediction_service = PredictionService()
+intelligent_recommender = IntelligentDrugRecommendation()
+drug_api = DrugDataAPI()
+
+# Build drug database for intelligent system
+intelligent_recommender.build_drug_database()
 
 @main.route('/')
 def index():
@@ -208,14 +218,72 @@ def predict():
             
         # Make prediction
         try:
-            results = prediction_service.predict_side_effects(data)
-            logger.info(f"Prediction results: {results}")
+            # Get ML predictions (existing system)
+            prediction_results = prediction_service.predict_side_effects(data)
+            
+            # Enhance with intelligent recommendations
+            if prediction_results.get('status') == 'success' and 'data' in prediction_results:
+                results = prediction_results['data']['results']
+                
+                for result in results:
+                    medication = result.get('medication')
+                    if medication:
+                        # Get intelligent alternatives
+                        intelligent_alternatives = intelligent_recommender.recommend_alternatives(
+                            medication, data, max_alternatives=5
+                        )
+                        
+                        # Transform intelligent alternatives to match existing format
+                        enhanced_alternatives = []
+                        
+                        # Group by recommendation level
+                        high_rec = [alt for alt in intelligent_alternatives if alt['recommendation_score'] > 0.5]
+                        medium_rec = [alt for alt in intelligent_alternatives if 0.3 <= alt['recommendation_score'] <= 0.5]
+                        low_rec = [alt for alt in intelligent_alternatives if alt['recommendation_score'] < 0.3]
+                        
+                        if high_rec:
+                            enhanced_alternatives.append({
+                                'category': 'high_recommendation',
+                                'category_name': 'Highly Recommended Alternatives',
+                                'alternatives': [{
+                                    'name': alt['drug_name'],
+                                    'dosage': 'Consult physician',
+                                    'description': f"{alt['reasoning']} (Score: {alt['recommendation_score']:.2f}, Risk: {alt['risk_score']:.2f})"
+                                } for alt in high_rec[:2]]
+                            })
+                        
+                        if medium_rec:
+                            enhanced_alternatives.append({
+                                'category': 'medium_recommendation',
+                                'category_name': 'Moderately Recommended Alternatives',
+                                'alternatives': [{
+                                    'name': alt['drug_name'],
+                                    'dosage': 'Consult physician',
+                                    'description': f"{alt['reasoning']} (Score: {alt['recommendation_score']:.2f}, Risk: {alt['risk_score']:.2f})"
+                                } for alt in medium_rec[:2]]
+                            })
+                        
+                        # Add FDA data if available
+                        try:
+                            fda_data = drug_api.get_fda_drug_info(medication)
+                            if fda_data:
+                                result['fda_warnings'] = fda_data.get('warnings', [])[:3]
+                                result['fda_contraindications'] = fda_data.get('contraindications', [])[:3]
+                        except Exception as e:
+                            logger.warning(f"Could not fetch FDA data for {medication}: {e}")
+                        
+                        # Replace static alternatives with intelligent ones
+                        if enhanced_alternatives:
+                            result['alternative_medications'] = enhanced_alternatives
+                            result['recommendation_source'] = 'Intelligent AI System + FDA Data'
+                        else:
+                            result['recommendation_source'] = 'Static Database (Fallback)'
             
             # Add user_id to the response if available
             if user_id:
-                results['user_id'] = user_id
+                prediction_results['user_id'] = user_id
                 
-            return jsonify(results)
+            return jsonify(prediction_results)
         except Exception as e:
             logger.error(f"Error during prediction: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")

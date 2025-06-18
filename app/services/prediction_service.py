@@ -1522,9 +1522,9 @@ class PredictionService:
         """
         Determine risk level based on probability
         """
-        if probability < 0.40:
+        if probability < 0.300:
             return 'Low'
-        elif probability < 0.60:
+        elif probability < 0.372:
             return 'Medium'
         else:
             return 'High'

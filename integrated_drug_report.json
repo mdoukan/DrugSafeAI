@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-06-18T23:00:54.926509",
+  "current_drug": "aspirin",
+  "patient_data": {
+    "age": 70,
+    "medical_history": [
+      "hypertension",
+      "diabetes",
+      "kidney_disease"
+    ],
+    "laboratory_tests": {
+      "creatinine": 1.8,
+      "alt": 35
+    },
+    "medications": [
+      "metformin",
+      "lisinopril"
+    ]
+  },
+  "summary": {
+    "total_recommendations": 0,
+    "high_confidence": 0,
+    "medium_confidence": 0,
+    "low_confidence": 0,
+    "warnings_count": 0
+  },
+  "recommendations": [],
+  "data_sources": [
+    "FDA API",
+    "PubMed",
+    "Intelligent Algorithm"
+  ],
+  "cache_status": "0 items cached"
+}

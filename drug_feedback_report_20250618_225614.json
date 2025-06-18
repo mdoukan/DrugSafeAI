@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-06-18T22:56:14.122139",
+  "analytics": {
+    "overall": {
+      "total": 1,
+      "critical": 0,
+      "resolved": 0,
+      "pending": 1
+    },
+    "by_drug": [
+      {
+        "drug": "aspirin",
+        "count": 1
+      }
+    ],
+    "by_type": [
+      {
+        "type": "incorrect_risk_factor",
+        "count": 1
+      }
+    ]
+  },
+  "feedback": [
+    {
+      "id": 1,
+      "timestamp": "2025-06-18T22:56:14.114964",
+      "drug_name": "aspirin",
+      "alternative_name": "Naproxen",
+      "feedback_type": "incorrect_risk_factor",
+      "severity": "high",
+      "description": "The risk factor for Naproxen (0.85) seems too low based on recent studies.",
+      "user_evidence": "Recent JAMA study 2023 shows higher bleeding risk",
+      "user_credentials": "MD",
+      "status": "pending",
+      "reviewed_by": null,
+      "review_notes": null,
+      "review_date": null
+    }
+  ]
+}
